@@ -1,0 +1,48 @@
+{
+  "name": "paginainicial",
+  "version": "1.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && powershell -Command \"Copy-Item -Path src -Destination dist -Recurse -Force -ErrorAction SilentlyContinue; Copy-Item -Path js -Destination dist -Recurse -Force -ErrorAction SilentlyContinue; Copy-Item -Path assets -Destination dist -Recurse -Force -ErrorAction SilentlyContinue; Copy-Item -Path bestiary -Destination dist -Recurse -Force -ErrorAction SilentlyContinue; Copy-Item -Path app-icon.jpg -Destination dist -Force -ErrorAction SilentlyContinue\"",
+    "dev:full": "concurrently \"node server.js\" \"vite\"",
+    "tauri": "tauri",
+    "lint": "eslint src/ js/ --ext .js,.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
+    "eslint": "^8.57.1",
+    "eslint-plugin-html": "^8.1.4",
+    "eslint-plugin-sonarjs": "^0.25.1",
+    "vite": "^8.1.4"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-sql": "^2.4.0",
+    "acorn": "^8.17.0",
+    "concurrently": "^10.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "gsap": "^3.15.0",
+    "html2canvas": "^1.4.1",
+    "mysql2": "^3.23.1",
+    "omniroute": "^3.8.49",
+    "phaser": "^4.2.1",
+    "puppeteer": "^25.3.0",
+    "three": "^0.185.1"
+  },
+  "allowScripts": {
+    "omniroute@3.8.49": true,
+    "esbuild@0.28.1": true,
+    "@swc/core@1.15.47": true,
+    "sharp@0.35.3": true,
+    "sharp@0.34.5": true
+  }
+}

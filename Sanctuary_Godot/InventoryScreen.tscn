@@ -1,0 +1,292 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://InventoryScreen.gd" id="1_inv"]
+[ext_resource type="Texture2D" path="res://hero_portrait.jpg" id="2_hero"]
+[ext_resource type="PackedScene" path="res://ItemSlot.tscn" id="3_slot"]
+[ext_resource type="Texture2D" path="res://inventory_bg.jpg" id="4_bg"]
+
+[node name="InventoryScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_inv")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.8)
+
+[node name="Panel" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -600.0
+offset_top = -320.0
+offset_right = 600.0
+offset_bottom = 320.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelBG" type="TextureRect" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="MainHBox" type="HBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = 20.0
+offset_right = -30.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="EquipPanel" type="VBoxContainer" parent="Panel/MainHBox"]
+custom_minimum_size = Vector2(450, 0)
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Panel/MainHBox/EquipPanel"]
+layout_mode = 2
+text = "⚔ EQUIPAMENTO"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.85, 0.65, 0.2, 1)
+
+[node name="PaperdollCenter" type="HBoxContainer" parent="Panel/MainHBox/EquipPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="LeftSlots" type="VBoxContainer" parent="Panel/MainHBox/EquipPanel/PaperdollCenter"]
+layout_mode = 2
+alignment = 1
+
+[node name="SlotCapacete" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/LeftSlots" instance=ExtResource("3_slot")]
+layout_mode = 2
+mouse_filter = 0
+
+[node name="LabelCapacete" type="Label" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/LeftSlots"]
+layout_mode = 2
+text = "Capacete"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.7, 0.6, 0.4, 1)
+
+[node name="SlotArma" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/LeftSlots" instance=ExtResource("3_slot")]
+layout_mode = 2
+mouse_filter = 0
+
+[node name="LabelArma" type="Label" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/LeftSlots"]
+layout_mode = 2
+text = "Arma"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.7, 0.6, 0.4, 1)
+
+[node name="SlotLuvas" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/LeftSlots" instance=ExtResource("3_slot")]
+layout_mode = 2
+mouse_filter = 0
+
+[node name="LabelLuvas" type="Label" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/LeftSlots"]
+layout_mode = 2
+text = "Luvas"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.7, 0.6, 0.4, 1)
+
+[node name="SlotAnel1" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/LeftSlots" instance=ExtResource("3_slot")]
+layout_mode = 2
+mouse_filter = 0
+
+[node name="LabelAnel1" type="Label" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/LeftSlots"]
+layout_mode = 2
+text = "Anel Esq."
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.7, 0.6, 0.4, 1)
+
+[node name="SlotColar1" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/LeftSlots" instance=ExtResource("3_slot")]
+layout_mode = 2
+mouse_filter = 0
+
+[node name="LabelColar1" type="Label" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/LeftSlots"]
+layout_mode = 2
+text = "Colar 1"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.7, 0.6, 0.4, 1)
+
+[node name="HeroPortrait" type="TextureRect" parent="Panel/MainHBox/EquipPanel/PaperdollCenter"]
+custom_minimum_size = Vector2(160, 220)
+layout_mode = 2
+texture = ExtResource("2_hero")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="RightSlots" type="VBoxContainer" parent="Panel/MainHBox/EquipPanel/PaperdollCenter"]
+layout_mode = 2
+alignment = 1
+
+[node name="SlotArmadura" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/RightSlots" instance=ExtResource("3_slot")]
+layout_mode = 2
+mouse_filter = 0
+
+[node name="LabelArmadura" type="Label" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/RightSlots"]
+layout_mode = 2
+text = "Armadura"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.7, 0.6, 0.4, 1)
+
+[node name="SlotEscudo" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/RightSlots" instance=ExtResource("3_slot")]
+layout_mode = 2
+mouse_filter = 0
+
+[node name="LabelEscudo" type="Label" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/RightSlots"]
+layout_mode = 2
+text = "Escudo"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.7, 0.6, 0.4, 1)
+
+[node name="SlotBotas" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/RightSlots" instance=ExtResource("3_slot")]
+layout_mode = 2
+mouse_filter = 0
+
+[node name="LabelBotas" type="Label" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/RightSlots"]
+layout_mode = 2
+text = "Botas"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.7, 0.6, 0.4, 1)
+
+[node name="SlotAnel2" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/RightSlots" instance=ExtResource("3_slot")]
+layout_mode = 2
+mouse_filter = 0
+
+[node name="LabelAnel2" type="Label" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/RightSlots"]
+layout_mode = 2
+text = "Anel Dir."
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.7, 0.6, 0.4, 1)
+
+[node name="SlotColar2" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/RightSlots" instance=ExtResource("3_slot")]
+layout_mode = 2
+mouse_filter = 0
+
+[node name="LabelColar2" type="Label" parent="Panel/MainHBox/EquipPanel/PaperdollCenter/RightSlots"]
+layout_mode = 2
+text = "Colar 2"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.7, 0.6, 0.4, 1)
+
+[node name="VSeparator" type="VSeparator" parent="Panel/MainHBox"]
+layout_mode = 2
+
+[node name="BagPanel" type="VBoxContainer" parent="Panel/MainHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="Panel/MainHBox/BagPanel"]
+layout_mode = 2
+text = "🎒 MOCHILA"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.85, 0.65, 0.2, 1)
+
+[node name="FilterBar" type="HBoxContainer" parent="Panel/MainHBox/BagPanel"]
+layout_mode = 2
+
+[node name="FilterAll" type="Button" parent="Panel/MainHBox/BagPanel/FilterBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Tudo"
+
+[node name="FilterEquip" type="Button" parent="Panel/MainHBox/BagPanel/FilterBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Equipamentos"
+
+[node name="FilterConsumable" type="Button" parent="Panel/MainHBox/BagPanel/FilterBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Consumíveis"
+
+[node name="BagScroll" type="ScrollContainer" parent="Panel/MainHBox/BagPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BagGrid" type="GridContainer" parent="Panel/MainHBox/BagPanel/BagScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 5
+
+[node name="CloseButton" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 1148.0
+offset_top = 5.0
+offset_right = 1192.0
+offset_bottom = 35.0
+text = "✕"
+theme_override_font_sizes/font_size = 16
+
+[node name="TooltipLayer" type="CanvasLayer" parent="."]
+layer = 20
+
+[node name="TooltipPanel" type="PanelContainer" parent="TooltipLayer"]
+visible = false
+offset_right = 250.0
+offset_bottom = 200.0
+mouse_filter = 2
+
+[node name="VBox" type="VBoxContainer" parent="TooltipLayer/TooltipPanel"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TooltipName" type="Label" parent="TooltipLayer/TooltipPanel/VBox"]
+layout_mode = 2
+text = "Nome do Item"
+mouse_filter = 2
+theme_override_font_sizes/font_size = 16
+
+[node name="TooltipRarity" type="Label" parent="TooltipLayer/TooltipPanel/VBox"]
+layout_mode = 2
+text = "Normal"
+mouse_filter = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="TooltipStats" type="Label" parent="TooltipLayer/TooltipPanel/VBox"]
+layout_mode = 2
+text = ""
+mouse_filter = 2
+theme_override_font_sizes/font_size = 13
+
+[node name="TooltipDesc" type="Label" parent="TooltipLayer/TooltipPanel/VBox"]
+layout_mode = 2
+text = ""
+mouse_filter = 2
+theme_override_font_sizes/font_size = 11
+autowrap_mode = 2

@@ -1,0 +1,216 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://CombatScene.gd" id="1_combat"]
+[ext_resource type="Texture2D" path="res://dungeon_bg.jpg" id="2_bg"]
+[ext_resource type="Texture2D" path="res://caustic_slime.jpg" id="3_slime"]
+[ext_resource type="Texture2D" path="res://hero_portrait.jpg" id="4_hero"]
+[ext_resource type="PackedScene" path="res://InventoryScreen.tscn" id="5_inv"]
+
+[node name="CombatScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_combat")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="TopBar" type="HBoxContainer" parent="HUD"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 100.0
+grow_horizontal = 2
+
+[node name="HeroPanel" type="PanelContainer" parent="HUD/TopBar"]
+custom_minimum_size = Vector2(350, 90)
+layout_mode = 2
+size_flags_horizontal = 2
+
+[node name="HBox" type="HBoxContainer" parent="HUD/TopBar/HeroPanel"]
+layout_mode = 2
+
+[node name="HeroPortrait" type="TextureRect" parent="HUD/TopBar/HeroPanel/HBox"]
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
+texture = ExtResource("4_hero")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="VBox" type="VBoxContainer" parent="HUD/TopBar/HeroPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HeroNameLabel" type="Label" parent="HUD/TopBar/HeroPanel/HBox/VBox"]
+layout_mode = 2
+text = "Guerreiro  300 / 300"
+
+[node name="HeroHPBar" type="ProgressBar" parent="HUD/TopBar/HeroPanel/HBox/VBox"]
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+max_value = 300.0
+value = 300.0
+show_percentage = false
+
+[node name="Spacer" type="Control" parent="HUD/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EnemyPanel" type="PanelContainer" parent="HUD/TopBar"]
+custom_minimum_size = Vector2(350, 90)
+layout_mode = 2
+size_flags_horizontal = 2
+
+[node name="VBox" type="VBoxContainer" parent="HUD/TopBar/EnemyPanel"]
+layout_mode = 2
+
+[node name="EnemyNameLabel" type="Label" parent="HUD/TopBar/EnemyPanel/VBox"]
+layout_mode = 2
+text = "Caustic Slime  1600 / 1600"
+
+[node name="EnemyHPBar" type="ProgressBar" parent="HUD/TopBar/EnemyPanel/VBox"]
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+max_value = 1600.0
+value = 1600.0
+show_percentage = false
+
+[node name="CenterArea" type="Control" parent="HUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="EnemySprite" type="TextureRect" parent="HUD/CenterArea"]
+layout_mode = 0
+offset_left = 440.0
+offset_top = 120.0
+offset_right = 840.0
+offset_bottom = 420.0
+texture = ExtResource("3_slime")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="FloatLayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="BottomBar" type="HBoxContainer" parent="HUD"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -80.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Spacer1" type="Control" parent="HUD/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AttackButton" type="Button" parent="HUD/BottomBar"]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+text = "⚔ ATACAR"
+
+[node name="DefendButton" type="Button" parent="HUD/BottomBar"]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+text = "🛡 DEFENDER"
+disabled = true
+
+[node name="ItemButton" type="Button" parent="HUD/BottomBar"]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+text = "🧪 ITEM"
+
+[node name="InventoryScreen" parent="HUD" instance=ExtResource("5_inv")]
+visible = false
+
+[node name="Spacer2" type="Control" parent="HUD/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EquipPanel" type="PanelContainer" parent="HUD"]
+visible = false
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -120.0
+offset_top = 110.0
+offset_bottom = 420.0
+grow_horizontal = 0
+
+[node name="VBox" type="VBoxContainer" parent="HUD/EquipPanel"]
+layout_mode = 2
+
+[node name="EquipTitle" type="Label" parent="HUD/EquipPanel/VBox"]
+layout_mode = 2
+text = "Equipamento"
+horizontal_alignment = 1
+
+[node name="WeaponSlot" type="TextureRect" parent="HUD/EquipPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 30.0
+offset_right = 74.0
+offset_bottom = 94.0
+expand_mode = 1
+stretch_mode = 6
+
+[node name="WeaponLabel" type="Label" parent="HUD/EquipPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 96.0
+offset_right = 110.0
+offset_bottom = 112.0
+text = "Arma"
+horizontal_alignment = 1
+
+[node name="HelmetSlot" type="TextureRect" parent="HUD/EquipPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 120.0
+offset_right = 74.0
+offset_bottom = 184.0
+expand_mode = 1
+stretch_mode = 6
+
+[node name="HelmetLabel" type="Label" parent="HUD/EquipPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 186.0
+offset_right = 110.0
+offset_bottom = 202.0
+text = "Capacete"
+horizontal_alignment = 1
+
+[node name="ArmorSlot" type="TextureRect" parent="HUD/EquipPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 210.0
+offset_right = 74.0
+offset_bottom = 274.0
+expand_mode = 1
+stretch_mode = 6
+
+[node name="ArmorLabel" type="Label" parent="HUD/EquipPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 276.0
+offset_right = 110.0
+offset_bottom = 292.0
+text = "Armadura"
+horizontal_alignment = 1

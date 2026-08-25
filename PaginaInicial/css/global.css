@@ -1,0 +1,407 @@
+/* ==========================================================================
+   1. RESET & VARIÁVEIS DE CORES GLOBAIS
+   ========================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-pure: #030101;
+  --bg-gradient: radial-gradient(
+    circle at center top,
+    #140305 0%,
+    #050102 100%
+  );
+  --card-bg: #0b0304;
+  --border-dark: #3a0b0b;
+  --border-light: #5a1818;
+  --gold: #f59e0b;
+  --gold-glowing: #fbbf24;
+  --gold-dim: #92400e;
+  --red-blood: #dc2626;
+  --red-dark: #7f1d1d;
+  --text-main: #f8fafc;
+  --text-muted: #9ca3af;
+  --mana-blue: #3b82f6;
+  --stamina-green: #10b981;
+  --defense-blue: #38bdf8;
+  --rank-max: #a855f7;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* --- DESIGN SYSTEM COMPONENTS --- */
+
+.btn {
+  background: linear-gradient(180deg, #6b1111 0%, #300505 100%);
+  color: var(--gold-glowing);
+  border: 1px solid var(--border-light);
+  font-family: "Cinzel", serif;
+  font-size: 0.95rem;
+  font-weight: 900;
+  padding: 14px 24px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+  letter-spacing: 1px;
+}
+
+.btn-secondary {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.btn-success {
+  background: linear-gradient(180deg, #065f46 0%, #022c22 100%);
+  border-color: #059669;
+  color: #6ee7b7;
+}
+
+.panel {
+  background: rgba(10, 3, 4, 0.95);
+  /* border: 1px solid var(--border-light); Removido em favor da borda do Kenney */
+  border-style: solid;
+  border-width: 16px;
+  border-image: url("../assets/images/ui/panel-border.webp") 16 stretch;
+  border-radius: 6px; /* Pode não funcionar com border-image dependendo do browser, mas é bom fallback */
+  padding: 25px; /* Ajustado um pouco para compensar a borda de 16px */
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9) inset;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.95) translateY(-10px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+  display: none;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  border-radius: 8px;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.9),
+    0 0 20px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  max-width: 380px;
+}
+
+.tooltip-title {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 10px;
+  font-size: 1.05rem;
+}
+/* === OVERHAUL VISUAL DA MASMORRA PROCEDURAL === */
+#procedural-map-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(10, 10, 15, 0.3), rgba(15, 10, 10, 0.4)),
+    url("/assets/images/dungeon_bg.webp");
+  background-size: cover;
+  background-position: center;
+  border: 3px solid #b91c1c;
+  border-radius: 15px;
+  box-shadow:
+    inset 0 0 50px rgba(0, 0, 0, 1),
+    0 0 20px rgba(220, 38, 38, 0.3);
+  padding: 40px;
+  position: relative;
+  min-height: 400px;
+}
+
+.map-node {
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, #2d2d3a 0%, #111 80%);
+  border: 3px solid #888;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    box-shadow 0.4s;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.8);
+}
+
+.map-node.active {
+  border-color: #fbbf24;
+  box-shadow: 0 0 25px rgba(251, 191, 36, 0.6);
+  transform: scale(1.15);
+  animation: pulse-glow 2s infinite alternate;
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 35px rgba(251, 191, 36, 0.9);
+  }
+}
+
+.map-node.cleared {
+  border-color: #10b981;
+  background: radial-gradient(circle, #064e3b 0%, #022c22 80%);
+  opacity: 0.8;
+}
+
+.map-node.locked {
+  opacity: 0.5;
+  filter: grayscale(100%) brightness(50%);
+  pointer-events: none;
+}
+
+.map-node-icon {
+  font-size: 2rem;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.8));
+}
+
+/* SVG Connection Lines */
+.map-connections-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.map-path-line {
+  stroke: #555;
+  stroke-width: 4;
+  stroke-dasharray: 8 6;
+  animation: path-flow 30s linear infinite;
+}
+.map-path-line.active-path {
+  stroke: #fbbf24;
+  filter: drop-shadow(0 0 5px #fbbf24);
+}
+
+@keyframes path-flow {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* =========================================
+   BESTIARY BOOK UI
+   ========================================= */
+.book-container {
+  display: flex;
+  background: #110905;
+  border: 2px solid #5a3e2b;
+  border-radius: 8px;
+  box-shadow:
+    0 0 20px rgba(0, 0, 0, 0.8),
+    inset 0 0 100px rgba(0, 0, 0, 0.9);
+  width: 100%;
+  min-height: 500px;
+  position: relative;
+  color: #d1bfae;
+}
+
+.book-spine {
+  width: 40px;
+  background: linear-gradient(90deg, #1f1109 0%, #3a2211 50%, #1f1109 100%);
+  border-left: 2px solid #0f0703;
+  border-right: 2px solid #0f0703;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 1);
+  z-index: 10;
+}
+
+.book-page {
+  flex: 1;
+  padding: 30px;
+  background:
+    url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.05"/></svg>'),
+    #18100c;
+  position: relative;
+  overflow-y: auto;
+  max-height: 600px;
+}
+
+.book-page-left {
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.book-page-right {
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bestiary-index-group {
+  margin-bottom: 25px;
+}
+
+.bestiary-index-title {
+  font-family: "Cinzel", serif;
+  color: #ef4444;
+  border-bottom: 1px solid #ef4444;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.bestiary-index-item {
+  cursor: pointer;
+  padding: 8px 10px;
+  margin-bottom: 5px;
+  background: rgba(0, 0, 0, 0.3);
+  border-left: 2px solid transparent;
+  transition: all 0.2s;
+  font-family: "Cinzel", serif;
+}
+
+.bestiary-index-item:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 2px solid #ef4444;
+  color: #fff;
+}
+
+.book-monster-title {
+  font-family: "UnifrakturCook", cursive;
+  color: #ef4444;
+  font-size: 2.2rem;
+  text-align: center;
+  margin-bottom: 5px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.book-monster-subtitle {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #9ca3af;
+  margin-bottom: 20px;
+  font-family: "Cinzel", serif;
+  letter-spacing: 1px;
+}
+
+.book-lore-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 15px;
+  border-radius: 4px;
+  border-left: 3px solid #7f1d1d;
+  margin-bottom: 20px;
+  font-style: italic;
+}
+
+.book-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.book-stat-box {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  border-radius: 4px;
+}
+
+.book-milestones {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 15px;
+  border: 1px solid #3b0707;
+  border-radius: 4px;
+}
+
+.book-milestone-item {
+  padding: 5px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  font-size: 0.85rem;
+}
+.book-milestone-item:last-child {
+  border-bottom: none;
+}
+
+.btn-book-back {
+  display: inline-block;
+  padding: 8px 15px;
+}
+
+html {
+  overflow: hidden !important;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  height: 100vh !important;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  transition: all 0.2s;
+  margin-bottom: 20px;
+}
+
+.btn-book-back {
+  background: #3b0707;
+  color: #f87171;
+  border: 1px solid #7f1d1d;
+  cursor: pointer;
+  font-family: "Cinzel", serif;
+  transition: all 0.2s;
+  margin-bottom: 20px;
+}
+.btn-book-back:hover {
+  background: #7f1d1d;
+  color: #fff;
+}
+
+.icon-fantasy {
+  height: 1em;
+  width: 1em;
+  vertical-align: middle;
+  margin-right: 4px;
+  filter: invert(65%) sepia(35%) saturate(304%) hue-rotate(345deg)
+    brightness(85%) contrast(85%); /* Ouro envelhecido base */
+}
+.icon-health {
+  filter: invert(34%) sepia(87%) saturate(5833%) hue-rotate(347deg)
+    brightness(97%) contrast(110%); /* Vermelho sangue */
+}
+.icon-attack {
+  filter: invert(70%) sepia(6%) saturate(22%) hue-rotate(338deg)
+    brightness(101%) contrast(89%); /* Prata/Cinza */
+}

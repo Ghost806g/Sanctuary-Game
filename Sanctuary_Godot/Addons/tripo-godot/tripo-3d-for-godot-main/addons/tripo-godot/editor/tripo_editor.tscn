@@ -1,0 +1,77 @@
+[gd_scene load_steps=4 format=3 uid="uid://cfy55hdaig15a"]
+
+[ext_resource type="Script" uid="uid://xp3xw22x6kml" path="res://addons/tripo-godot/editor/tripo_editor.gd" id="1_rimmv"]
+[ext_resource type="PackedScene" uid="uid://3dshdu3pw5on" path="res://addons/tripo-godot/editor/text_to_model.tscn" id="2_4e13j"]
+[ext_resource type="PackedScene" uid="uid://cyoq6tix8750g" path="res://addons/tripo-godot/editor/image_to_model.tscn" id="3_4e13j"]
+
+[node name="TripoAI" type="VBoxContainer" node_paths=PackedStringArray("tabc_task_type", "line_api_key", "button_confirm", "label_credit", "pb_progress", "button_generate", "button_stop", "text_to_model", "image_to_model")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_rimmv")
+tabc_task_type = NodePath("TabContainer")
+line_api_key = NodePath("BottomMenu/APIKey/LineEdit")
+button_confirm = NodePath("BottomMenu/APIKey/ConfirmButton")
+label_credit = NodePath("BottomMenu/APIKey/CreditLabel")
+pb_progress = NodePath("BottomMenu/ProgressBar")
+button_generate = NodePath("BottomMenu/GenerateButton")
+button_stop = NodePath("BottomMenu/StopButton")
+text_to_model = NodePath("TabContainer/TextToModel")
+image_to_model = NodePath("TabContainer/ImageToModel")
+
+[node name="TabContainer" type="TabContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 0
+
+[node name="TextToModel" parent="TabContainer" node_paths=PackedStringArray("editor") instance=ExtResource("2_4e13j")]
+layout_mode = 2
+editor = NodePath("../..")
+
+[node name="ImageToModel" parent="TabContainer" node_paths=PackedStringArray("editor") instance=ExtResource("3_4e13j")]
+visible = false
+layout_mode = 2
+editor = NodePath("../..")
+metadata/_tab_index = 1
+
+[node name="BottomMenu" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="APIKey" type="HBoxContainer" parent="BottomMenu"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="BottomMenu/APIKey"]
+layout_mode = 2
+text = "API Key"
+
+[node name="LineEdit" type="LineEdit" parent="BottomMenu/APIKey"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Please input your API key..."
+
+[node name="ConfirmButton" type="Button" parent="BottomMenu/APIKey"]
+layout_mode = 2
+text = "Confirm"
+
+[node name="CreditLabel" type="Label" parent="BottomMenu/APIKey"]
+layout_mode = 2
+text = "Credit : 0"
+
+[node name="ProgressBar" type="ProgressBar" parent="BottomMenu"]
+layout_mode = 2
+
+[node name="GenerateButton" type="Button" parent="BottomMenu"]
+layout_mode = 2
+disabled = true
+text = "Generate"
+
+[node name="StopButton" type="Button" parent="BottomMenu"]
+visible = false
+layout_mode = 2
+text = "Stop"
+
+[connection signal="button_up" from="BottomMenu/APIKey/ConfirmButton" to="." method="on_confirm_button_up"]
+[connection signal="button_up" from="BottomMenu/GenerateButton" to="." method="on_generate_button_up"]
+[connection signal="button_up" from="BottomMenu/StopButton" to="." method="stop_task"]

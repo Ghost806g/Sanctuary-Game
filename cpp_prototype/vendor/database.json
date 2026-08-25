@@ -1,0 +1,415 @@
+{
+  "Rato Mutante": {
+    "name": "Rato Mutante",
+    "hp": 45,
+    "atk": 8,
+    "def": 5,
+    "speed": 15
+  },
+  "Esqueleto de Guarda": {
+    "name": "Esqueleto de Guarda",
+    "hp": 65,
+    "atk": 12,
+    "def": 15,
+    "speed": 15
+  },
+  "Zumbi Pútrido": {
+    "name": "Zumbi Pútrido",
+    "hp": 80,
+    "atk": 10,
+    "def": 10,
+    "speed": 15
+  },
+  "Roda de Esqueletos": {
+    "name": "Roda de Esqueletos",
+    "hp": 55,
+    "atk": 15,
+    "def": 10,
+    "speed": 15
+  },
+  "Morcego Vampiro": {
+    "name": "Morcego Vampiro",
+    "hp": 40,
+    "atk": 14,
+    "def": 5,
+    "speed": 15
+  },
+  "Carrasco Zumbi": {
+    "name": "Carrasco Zumbi",
+    "hp": 95,
+    "atk": 18,
+    "def": 12,
+    "speed": 15
+  },
+  "Rato Tumular": {
+    "name": "Rato Tumular",
+    "hp": 50,
+    "atk": 9,
+    "def": 5,
+    "speed": 15
+  },
+  "Esqueleto Mago": {
+    "name": "Esqueleto Mago",
+    "hp": 55,
+    "atk": 16,
+    "def": 8,
+    "speed": 15
+  },
+  "Aranha das Criptas": {
+    "name": "Aranha das Criptas",
+    "hp": 60,
+    "atk": 11,
+    "def": 10,
+    "speed": 15
+  },
+  "Lodo Carnívoro": {
+    "name": "Lodo Carnívoro",
+    "hp": 110,
+    "atk": 7,
+    "def": 20,
+    "speed": 15
+  },
+  "Sapo Demoníaco": {
+    "name": "Sapo Demoníaco",
+    "hp": 120,
+    "atk": 22,
+    "def": 12,
+    "speed": 15
+  },
+  "Cultista do Lodo": {
+    "name": "Cultista do Lodo",
+    "hp": 100,
+    "atk": 28,
+    "def": 8,
+    "speed": 15
+  },
+  "Lodo Ácido": {
+    "name": "Lodo Ácido",
+    "hp": 160,
+    "atk": 18,
+    "def": 25,
+    "speed": 15
+  },
+  "Corvo da Podridão": {
+    "name": "Corvo da Podridão",
+    "hp": 90,
+    "atk": 35,
+    "def": 10,
+    "speed": 15
+  },
+  "Sanguessuga Gigante": {
+    "name": "Sanguessuga Gigante",
+    "hp": 85,
+    "atk": 15,
+    "def": 15,
+    "speed": 15
+  },
+  "Verme da Lama": {
+    "name": "Verme da Lama",
+    "hp": 130,
+    "atk": 20,
+    "def": 18,
+    "speed": 15
+  },
+  "Bruxa Menor do Pântano": {
+    "name": "Bruxa Menor do Pântano",
+    "hp": 95,
+    "atk": 25,
+    "def": 10,
+    "speed": 15
+  },
+  "Cão Infectado": {
+    "name": "Cão Infectado",
+    "hp": 105,
+    "atk": 24,
+    "def": 12,
+    "speed": 15
+  },
+  "Troll de Podridão": {
+    "name": "Troll de Podridão",
+    "hp": 180,
+    "atk": 18,
+    "def": 30,
+    "speed": 15
+  },
+  "Árvore Podre Andante": {
+    "name": "Árvore Podre Andante",
+    "hp": 200,
+    "atk": 14,
+    "def": 35,
+    "speed": 15
+  },
+  "Diabrete Ferreiro": {
+    "name": "Diabrete Ferreiro",
+    "hp": 220,
+    "atk": 45,
+    "def": 20,
+    "speed": 15
+  },
+  "Golem de Magma": {
+    "name": "Golem de Magma",
+    "hp": 400,
+    "atk": 30,
+    "def": 50,
+    "speed": 15
+  },
+  "Súcubo Torturadora": {
+    "name": "Súcubo Torturadora",
+    "hp": 190,
+    "atk": 55,
+    "def": 15,
+    "speed": 15
+  },
+  "Mineiro Enlouquecido": {
+    "name": "Mineiro Enlouquecido",
+    "hp": 200,
+    "atk": 40,
+    "def": 25,
+    "speed": 15
+  },
+  "Demônio de Fornalha Menor": {
+    "name": "Demônio de Fornalha Menor",
+    "hp": 280,
+    "atk": 35,
+    "def": 35,
+    "speed": 15
+  },
+  "Verme de Magma": {
+    "name": "Verme de Magma",
+    "hp": 250,
+    "atk": 38,
+    "def": 22,
+    "speed": 15
+  },
+  "Morcego de Fogo": {
+    "name": "Morcego de Fogo",
+    "hp": 150,
+    "atk": 28,
+    "def": 12,
+    "speed": 15
+  },
+  "Escravo de Cinzas": {
+    "name": "Escravo de Cinzas",
+    "hp": 180,
+    "atk": 30,
+    "def": 18,
+    "speed": 15
+  },
+  "Lagarto Escamoso": {
+    "name": "Lagarto Escamoso",
+    "hp": 230,
+    "atk": 32,
+    "def": 40,
+    "speed": 15
+  },
+  "Elemental do Fogo": {
+    "name": "Elemental do Fogo",
+    "hp": 210,
+    "atk": 42,
+    "def": 10,
+    "speed": 15
+  },
+  "Cão Infernal": {
+    "name": "Cão Infernal",
+    "hp": 130,
+    "atk": 25,
+    "def": 20,
+    "speed": 15
+  },
+  "Salamandra de Obsidiana": {
+    "name": "Salamandra de Obsidiana",
+    "hp": 150,
+    "atk": 20,
+    "def": 60,
+    "speed": 15
+  },
+  "Esqueleto Carbonizado": {
+    "name": "Esqueleto Carbonizado",
+    "hp": 100,
+    "atk": 28,
+    "def": 10,
+    "speed": 15
+  },
+  "Pássaro de Fogo": {
+    "name": "Pássaro de Fogo",
+    "hp": 80,
+    "atk": 25,
+    "def": 5,
+    "speed": 15
+  },
+  "Verme de Rocha": {
+    "name": "Verme de Rocha",
+    "hp": 170,
+    "atk": 20,
+    "def": 40,
+    "speed": 15
+  },
+  "Cultista de Chamas": {
+    "name": "Cultista de Chamas",
+    "hp": 95,
+    "atk": 30,
+    "def": 10,
+    "speed": 15
+  },
+  "Gigante de Cinzas": {
+    "name": "Gigante de Cinzas",
+    "hp": 200,
+    "atk": 35,
+    "def": 20,
+    "speed": 15
+  },
+  "Yom Voraz": {
+    "name": "Yom Voraz",
+    "hp": 150,
+    "atk": 25,
+    "def": 5,
+    "speed": 15
+  },
+  "Leshen Ancião": {
+    "name": "Leshen Ancião",
+    "hp": 200,
+    "atk": 15,
+    "def": 25,
+    "speed": 15
+  },
+  "Aranha Viúva Negra": {
+    "name": "Aranha Viúva Negra",
+    "hp": 110,
+    "atk": 22,
+    "def": 10,
+    "speed": 15
+  },
+  "Ent Corrompido": {
+    "name": "Ent Corrompido",
+    "hp": 250,
+    "atk": 18,
+    "def": 40,
+    "speed": 15
+  },
+  "Cultista de Floresta": {
+    "name": "Cultista de Floresta",
+    "hp": 120,
+    "atk": 28,
+    "def": 12,
+    "speed": 15
+  },
+  "Verme de Madeira": {
+    "name": "Verme de Madeira",
+    "hp": 140,
+    "atk": 20,
+    "def": 30,
+    "speed": 15
+  },
+  "Cria de Seath": {
+    "name": "Cria de Seath",
+    "hp": 180,
+    "atk": 25,
+    "def": 20,
+    "speed": 15
+  },
+  "Feiticeiro Enlouquecido": {
+    "name": "Feiticeiro Enlouquecido",
+    "hp": 110,
+    "atk": 35,
+    "def": 10,
+    "speed": 15
+  },
+  "Borbolet de Cristal": {
+    "name": "Borbolet de Cristal",
+    "hp": 80,
+    "atk": 15,
+    "def": 5,
+    "speed": 15
+  },
+  "Esqueleto Mágico": {
+    "name": "Esqueleto Mágico",
+    "hp": 130,
+    "atk": 22,
+    "def": 15,
+    "speed": 15
+  },
+  "Lobo das Estrelas": {
+    "name": "Lobo das Estrelas",
+    "hp": 140,
+    "atk": 30,
+    "def": 12,
+    "speed": 15
+  },
+  "Marionete Quebrada": {
+    "name": "Marionete Quebrada",
+    "hp": 160,
+    "atk": 18,
+    "def": 25,
+    "speed": 15
+  },
+  "Ratos de Biblioteca": {
+    "name": "Ratos de Biblioteca",
+    "hp": 60,
+    "atk": 12,
+    "def": 5,
+    "speed": 15
+  },
+  "Espectro Arcano": {
+    "name": "Espectro Arcano",
+    "hp": 100,
+    "atk": 32,
+    "def": 5,
+    "speed": 15
+  },
+  "Apóstolo Menor": {
+    "name": "Apóstolo Menor",
+    "hp": 150,
+    "atk": 40,
+    "def": 20,
+    "speed": 15
+  },
+  "Semente dos Mal": {
+    "name": "Semente dos Mal",
+    "hp": 200,
+    "atk": 25,
+    "def": 30,
+    "speed": 15
+  },
+  "Cria Cósmica": {
+    "name": "Cria Cósmica",
+    "hp": 160,
+    "atk": 45,
+    "def": 10,
+    "speed": 15
+  },
+  "Devorador de Mentes": {
+    "name": "Devorador de Mentes",
+    "hp": 140,
+    "atk": 50,
+    "def": 5,
+    "speed": 15
+  },
+  "Cavaleiro dos Sol Negro": {
+    "name": "Cavaleiro dos Sol Negro",
+    "hp": 250,
+    "atk": 35,
+    "def": 45,
+    "speed": 15
+  },
+  "Sombra Distorcida": {
+    "name": "Sombra Distorcida",
+    "hp": 120,
+    "atk": 38,
+    "def": 0,
+    "speed": 15
+  },
+  "Carniçal do Eclipse": {
+    "name": "Carniçal do Eclipse",
+    "hp": 190,
+    "atk": 28,
+    "def": 15,
+    "speed": 15
+  },
+  "Verme do Vazio": {
+    "name": "Verme do Vazio",
+    "hp": 280,
+    "atk": 25,
+    "def": 35,
+    "speed": 15
+  }
+}

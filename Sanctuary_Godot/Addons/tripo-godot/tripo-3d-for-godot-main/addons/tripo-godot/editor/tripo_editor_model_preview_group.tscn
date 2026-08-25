@@ -1,0 +1,95 @@
+[gd_scene load_steps=7 format=3 uid="uid://cavghheh1p35n"]
+
+[ext_resource type="Script" uid="uid://s3yvlhbvkk8n" path="res://addons/tripo-godot/editor/tripo_editor_model_preview_group.gd" id="1_t21u0"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_t21u0"]
+
+[sub_resource type="Sky" id="Sky_cpelc"]
+sky_material = SubResource("ProceduralSkyMaterial_t21u0")
+
+[sub_resource type="Environment" id="Environment_8lo7u"]
+background_mode = 2
+background_energy_multiplier = 2.0
+sky = SubResource("Sky_cpelc")
+
+[sub_resource type="World3D" id="World3D_t21u0"]
+environment = SubResource("Environment_8lo7u")
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_t21u0"]
+
+[node name="PreviewGroup" type="VBoxContainer" node_paths=PackedStringArray("camera", "camera_pivot", "pivot", "button_save_to", "button_path", "dialog_save_to", "line_save_path")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+script = ExtResource("1_t21u0")
+camera = NodePath("SubViewportContainer/SubViewport/CameraPivot/Camera3D")
+camera_pivot = NodePath("SubViewportContainer/SubViewport/CameraPivot")
+pivot = NodePath("SubViewportContainer/SubViewport/Pivot")
+button_save_to = NodePath("HBoxContainer/SaveToButton")
+button_path = NodePath("HBoxContainer/PathButton")
+dialog_save_to = NodePath("HBoxContainer/PathButton/FileDialog")
+line_save_path = NodePath("HBoxContainer/SaveToPath")
+
+[node name="Preview" type="Label" parent="."]
+layout_mode = 2
+text = "Preview"
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+stretch = true
+mouse_target = true
+
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer"]
+own_world_3d = true
+world_3d = SubResource("World3D_t21u0")
+handle_input_locally = false
+size = Vector2i(1280, 658)
+render_target_update_mode = 4
+
+[node name="CameraPivot" type="Node3D" parent="SubViewportContainer/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2)
+
+[node name="Camera3D" type="Camera3D" parent="SubViewportContainer/SubViewport/CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
+current = true
+
+[node name="Pivot" type="Node3D" parent="SubViewportContainer/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2)
+
+[node name="TestMesh" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/Pivot"]
+visible = false
+mesh = SubResource("CapsuleMesh_t21u0")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="SaveToButton" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+disabled = true
+text = "Save To"
+
+[node name="PathButton" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+disabled = true
+text = "Path"
+
+[node name="FileDialog" type="FileDialog" parent="HBoxContainer/PathButton"]
+title = "Open a Directory"
+ok_button_text = "Select Current Folder"
+file_mode = 2
+access = 2
+
+[node name="SaveToPath" type="LineEdit" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "res://tripo_generated//my_model.glb"
+
+[connection signal="focus_entered" from="SubViewportContainer" to="." method="_on_sub_viewport_container_focus_entered"]
+[connection signal="focus_exited" from="SubViewportContainer" to="." method="_on_sub_viewport_container_focus_exited"]
+[connection signal="button_up" from="HBoxContainer/SaveToButton" to="." method="_on_save_to_button_button_up"]
+[connection signal="button_up" from="HBoxContainer/PathButton" to="." method="_on_path_button_button_up"]
+[connection signal="dir_selected" from="HBoxContainer/PathButton/FileDialog" to="." method="_on_file_dialog_dir_selected"]

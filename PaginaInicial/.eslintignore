@@ -1,0 +1,6 @@
+dist/
+node_modules/
+public/
+assets/
+js/jogo_monolith_backup.js
+js/jogo.js

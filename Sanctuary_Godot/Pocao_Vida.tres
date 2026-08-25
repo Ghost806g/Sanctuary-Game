@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ItemData.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://potion_icon.jpg" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+name = "Poção de Vida"
+type = "consumivel"
+damage = 0
+power = 150
+defense = 0
+durability = 1
+max_durability = 1
+rarity = "Normal"
+desc = "Restaura vasto HP"
+icon = ExtResource("2_icon")

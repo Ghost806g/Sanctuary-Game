@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lore & Bestiário - Apex Build</title>
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/lore_dark.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&family=La+Belle+Aurore&family=Pirata+One&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="lore-activation-toast"></div>
+    <div id="lore-story-overlay" onclick="closeLoreStoryOverlay()"></div>
+
+    <div class="lore-nav">
+      <button
+        class="tab-btn active"
+        data-tab="mapa"
+        onclick="openTab('mapa', this)"
+      >
+        Mapa de Sanctuary
+      </button>
+      <button
+        class="tab-btn"
+        data-tab="bestiario"
+        onclick="openTab('bestiario', this)"
+      >
+        Bestiário
+      </button>
+      <button
+        class="tab-btn"
+        data-tab="memorias"
+        onclick="openTab('memorias', this)"
+      >
+        Memórias
+      </button>
+      <button
+        class="tab-btn"
+        data-tab="companheiros"
+        onclick="openTab('companheiros', this)"
+      >
+        Companheiros
+      </button>
+      <button
+        class="tab-btn"
+        data-tab="cronologia"
+        onclick="openTab('cronologia', this)"
+      >
+        Cronologia
+      </button>
+      <button
+        class="tab-btn"
+        data-tab="diario"
+        onclick="openTab('diario', this)"
+      >
+        Diário
+      </button>
+      <button
+        class="tab-btn"
+        data-tab="reliquias"
+        onclick="openTab('reliquias', this)"
+      >
+        Relíquias Falantes
+      </button>
+      <button
+        class="btn btn-secondary"
+        onclick="window.location.href = 'Jogo.html'"
+        style="
+          margin-left: auto;
+          background: linear-gradient(180deg, #0b4a22 0%, #031a0b 100%);
+          border-color: #10b981;
+        "
+      >
+        ▶ Voltar ao Jogo
+      </button>
+      <button
+        class="btn btn-secondary"
+        onclick="window.location.href = 'MenuPrincipal.html'"
+        style="margin-left: 10px"
+      >
+        Menu Principal
+      </button>
+    </div>
+
+    <!-- ABA 1: MAPA -->
+    <div id="mapa" class="tab-content active">
+      <div class="map-viewport" id="map-container">
+        <div class="map-grid"></div>
+        <div class="map-glow"></div>
+        <div class="fog-of-war"></div>
+
+        <!-- SVG para rotas -->
+        <svg class="map-svg-layer" id="map-routes"></svg>
+
+        <!-- Landmarks serão injetados aqui via JS -->
+        <div id="map-landmarks-layer"></div>
+
+        <div class="map-legend" id="map-legend">
+          <strong>🗺️ Explorador de Sanctuary</strong>
+          <p>
+            Clique nas regiões brilhantes para examinar a lore e identificar os
+            perigos que espreitam nas trevas.
+          </p>
+        </div>
+
+        <!-- Painel Interativo -->
+        <div class="map-side-panel" id="map-side-panel">
+          <button class="panel-close" onclick="closeMapPanel()">✖</button>
+          <h3 id="panel-title">Título da Região</h3>
+          <div
+            style="
+              font-size: 0.85rem;
+              color: #93c5fd;
+              margin-bottom: 15px;
+              background: rgba(59, 130, 246, 0.1);
+              padding: 5px 10px;
+              border-radius: 4px;
+              display: inline-block;
+            "
+            id="panel-level"
+          >
+            Nível de Perigo: Desconhecido
+          </div>
+
+          <p
+            id="panel-desc"
+            style="
+              font-size: 0.95rem;
+              line-height: 1.6;
+              color: #cbd5e1;
+              font-style: italic;
+              border-left: 3px solid var(--border-dark);
+              padding-left: 10px;
+              margin-bottom: 25px;
+            "
+          >
+            Descrição do local...
+          </p>
+
+          <div
+            style="
+              font-weight: bold;
+              font-size: 1.05rem;
+              border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+              padding-bottom: 5px;
+              margin-bottom: 10px;
+            "
+          >
+            Habitantes Locais (Bestiário)
+          </div>
+          <div class="biome-monster-list" id="panel-monsters">
+            <!-- Cards injetados via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA 2: BESTIÁRIO (O LIVRO) -->
+    <div id="bestiario" class="tab-content">
+      <div
+        id="bestiario-desk"
+        style="
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 80vh;
+          background: #3b2f2f url(&quot;assets/images/wood_desk_bg.webp&quot;)
+            center/cover;
+          position: relative;
+        "
+      >
+        <!-- Canvas 3D (WebGL) -->
+        <canvas
+          id="webgl-book-canvas"
+          style="
+            width: 100%;
+            height: 800px;
+            display: block;
+            z-index: 10;
+            position: relative;
+          "
+        ></canvas>
+
+        <!-- Container Offscreen para gerar texturas via html2canvas -->
+        <div
+          id="offscreen-book-render"
+          style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.01;
+            pointer-events: none;
+            z-index: -1;
+          "
+        >
+          <div class="real-book-container" id="real-book-container">
+            <!-- A capa será desenhada via JS, ou o interior do livro -->
+          </div>
+        </div>
+
+        <!-- Controles do Livro flutuantes -->
+        <div
+          class="real-book-nav"
+          id="real-book-nav"
+          style="display: none; z-index: 20"
+        >
+          <button class="btn btn-secondary" onclick="closeRealBook()">
+            Fechar Livro
+          </button>
+          <button class="btn" id="btn-real-prev" onclick="turnRealPage(-1)">
+            ◄ Voltar
+          </button>
+          <button class="btn" id="btn-real-next" onclick="turnRealPage(1)">
+            Avançar ►
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA 3: MEMÓRIAS -->
+    <div id="memorias" class="tab-content">
+      <div id="memories-header" style="margin-bottom: 16px"></div>
+      <div class="grid-container" id="memories-container"></div>
+    </div>
+
+    <!-- ABA 4: COMPANHEIROS -->
+    <div id="companheiros" class="tab-content">
+      <div class="grid-container" id="companions-container">
+        <!-- Cards injetados pelo JS -->
+      </div>
+    </div>
+
+    <!-- ABA 5: CRONOLOGIA -->
+    <div id="cronologia" class="tab-content">
+      <div class="constellation-map">
+        <div
+          class="constellation-header"
+          style="
+            position: relative;
+            z-index: 5;
+            width: 100%;
+            pointer-events: none;
+            padding-top: 40px;
+          "
+        >
+          <h2
+            style="
+              text-align: center;
+              font-family: &quot;UnifrakturCook&quot;, cursive;
+              color: var(--gold-glowing);
+              font-size: 2.8rem;
+              margin: 0;
+              text-shadow: 0 5px 20px rgba(0, 0, 0, 0.9);
+            "
+          >
+            Cronologia do Santuário
+          </h2>
+          <p
+            style="
+              text-align: center;
+              color: #9ca3af;
+              margin-top: 10px;
+              font-size: 1.1rem;
+              text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+            "
+          >
+            A história do mundo, contada em cinzas e sangue. Cada era moldou o
+            Santuário que você conhece.
+          </p>
+        </div>
+
+        <!-- SHOOTING STARS -->
+        <div class="shooting-star-container">
+          <div
+            class="shooting-star"
+            style="top: 20%; left: 10%; animation-delay: 0s"
+          ></div>
+          <div
+            class="shooting-star"
+            style="top: 50%; left: 80%; animation-delay: 4s"
+          ></div>
+          <div
+            class="shooting-star"
+            style="top: 80%; left: 30%; animation-delay: 7s"
+          ></div>
+          <div
+            class="shooting-star"
+            style="top: 15%; left: 60%; animation-delay: 10s"
+          ></div>
+        </div>
+
+        <svg
+          class="constellation-lines"
+          viewBox="0 0 1000 600"
+          preserveAspectRatio="none"
+        >
+          <!-- BACKGROUND STARFIELD & MINOR CONSTELLATIONS -->
+          <g id="minor-constellations" style="pointer-events: none">
+            <!-- The Hound -->
+            <circle cx="100" cy="150" r="1.5" fill="#fff" opacity="0.4" />
+            <circle cx="150" cy="120" r="1" fill="#fff" opacity="0.3" />
+            <circle cx="220" cy="160" r="1.2" fill="#fff" opacity="0.5" />
+            <circle cx="180" cy="220" r="1" fill="#fff" opacity="0.2" />
+            <circle cx="90" cy="200" r="1.5" fill="#fff" opacity="0.4" />
+            <polyline
+              points="100,150 150,120 220,160 180,220 90,200 100,150"
+              fill="none"
+              stroke="#fff"
+              stroke-width="0.5"
+              opacity="0.1"
+            />
+
+            <!-- The Sword -->
+            <circle cx="850" cy="150" r="1.5" fill="#fff" opacity="0.5" />
+            <circle cx="820" cy="200" r="1" fill="#fff" opacity="0.3" />
+            <circle cx="780" cy="280" r="1.8" fill="#fff" opacity="0.6" />
+            <circle cx="720" cy="350" r="1" fill="#fff" opacity="0.3" />
+            <circle cx="750" cy="380" r="1.5" fill="#fff" opacity="0.4" />
+            <circle cx="680" cy="420" r="1" fill="#fff" opacity="0.2" />
+            <polyline
+              points="850,150 820,200 780,280 720,350 680,420"
+              fill="none"
+              stroke="#fff"
+              stroke-width="0.5"
+              opacity="0.15"
+            />
+            <line
+              x1="720"
+              y1="350"
+              x2="750"
+              y2="380"
+              stroke="#fff"
+              stroke-width="0.5"
+              opacity="0.15"
+            />
+
+            <!-- The Crown -->
+            <circle cx="450" cy="100" r="1.5" fill="#fff" opacity="0.4" />
+            <circle cx="420" cy="130" r="1" fill="#fff" opacity="0.3" />
+            <circle cx="480" cy="140" r="1" fill="#fff" opacity="0.3" />
+            <circle cx="400" cy="180" r="1.2" fill="#fff" opacity="0.5" />
+            <circle cx="500" cy="190" r="1.2" fill="#fff" opacity="0.5" />
+            <polyline
+              points="400,180 420,130 450,100 480,140 500,190"
+              fill="none"
+              stroke="#fff"
+              stroke-width="0.5"
+              opacity="0.1"
+            />
+
+            <!-- The Serpent -->
+            <circle cx="100" cy="500" r="1.5" fill="#fff" opacity="0.4" />
+            <circle cx="180" cy="480" r="1" fill="#fff" opacity="0.3" />
+            <circle cx="260" cy="520" r="1.2" fill="#fff" opacity="0.5" />
+            <circle cx="340" cy="490" r="1" fill="#fff" opacity="0.3" />
+            <circle cx="420" cy="550" r="1.8" fill="#fff" opacity="0.6" />
+            <polyline
+              points="100,500 180,480 260,520 340,490 420,550"
+              fill="none"
+              stroke="#fff"
+              stroke-width="0.5"
+              opacity="0.1"
+            />
+
+            <!-- Scattered Dust -->
+            <circle cx="50" cy="50" r="1" fill="#fff" opacity="0.2" />
+            <circle cx="200" cy="30" r="1.5" fill="#fff" opacity="0.4" />
+            <circle cx="350" cy="80" r="0.8" fill="#fff" opacity="0.1" />
+            <circle cx="650" cy="60" r="1.2" fill="#fff" opacity="0.3" />
+            <circle cx="950" cy="100" r="1" fill="#fff" opacity="0.2" />
+            <circle cx="900" cy="250" r="1.5" fill="#fff" opacity="0.5" />
+            <circle cx="950" cy="400" r="1" fill="#fff" opacity="0.3" />
+            <circle cx="850" cy="550" r="1.8" fill="#fff" opacity="0.6" />
+            <circle cx="700" cy="500" r="1" fill="#fff" opacity="0.2" />
+            <circle cx="550" cy="580" r="1.5" fill="#fff" opacity="0.4" />
+            <circle cx="400" cy="550" r="1" fill="#fff" opacity="0.3" />
+            <circle cx="250" cy="520" r="1.2" fill="#fff" opacity="0.5" />
+            <circle cx="100" cy="580" r="1.5" fill="#fff" opacity="0.4" />
+            <circle cx="50" cy="450" r="1" fill="#fff" opacity="0.2" />
+            <circle cx="150" cy="350" r="1.8" fill="#fff" opacity="0.5" />
+            <circle cx="300" cy="300" r="1" fill="#fff" opacity="0.3" />
+            <circle cx="550" cy="200" r="1.5" fill="#fff" opacity="0.4" />
+            <circle cx="600" cy="300" r="1" fill="#fff" opacity="0.2" />
+            <circle cx="700" cy="150" r="1" fill="#fff" opacity="0.2" />
+            <circle cx="800" cy="80" r="1.2" fill="#fff" opacity="0.3" />
+            <circle cx="50" cy="300" r="1" fill="#fff" opacity="0.2" />
+          </g>
+        </svg>
+
+        <!-- ERA 1: A Chama (Flame) -->
+        <div
+          class="constellation-cluster"
+          style="left: 15%; top: 30%; --glow-color: #f59e0b"
+        >
+          <svg viewBox="-50 -50 100 100" class="cluster-svg">
+            <polyline points="0,-40 25,10 0,30 -25,10 0,-40" class="c-line" />
+            <polyline points="0,30 0,-10" class="c-line" />
+            <circle cx="0" cy="-40" r="3" class="c-star" />
+            <circle cx="25" cy="10" r="3" class="c-star" />
+            <circle cx="0" cy="30" r="4" class="c-star c-star-main" />
+            <circle cx="-25" cy="10" r="3" class="c-star" />
+            <circle cx="0" cy="-10" r="2" class="c-star" />
+          </svg>
+          <div class="star-card">
+            <div class="timeline-era" style="color: #f59e0b">
+              Era I — A Primeira Chama
+            </div>
+            <div class="timeline-date">Antes do Tempo Registrado</div>
+            <p>
+              No vazio primordial, uma chama solitária nasceu do nada. Dela
+              vieram os Primeiros — seres de luz e sombra que teceram o
+              Santuário com fogo e osso. A chama original era tanto criação
+              quanto destruição, e seu calor moldou as primeiras catacumbas como
+              berço de vida.
+            </p>
+            <div
+              class="timeline-tag"
+              style="background: rgba(245, 158, 11, 0.15); color: #f59e0b"
+            >
+              🔥 Criação
+            </div>
+          </div>
+        </div>
+
+        <!-- ERA 2: O Martelo (Hammer) -->
+        <div
+          class="constellation-cluster"
+          style="left: 35%; top: 20%; --glow-color: #9ca3af"
+        >
+          <svg viewBox="-50 -50 100 100" class="cluster-svg">
+            <polyline
+              points="0,40 0,0 -20,-10 20,-10 20,10 -20,10 -20,-10"
+              class="c-line"
+            />
+            <circle cx="0" cy="40" r="2" class="c-star" />
+            <circle cx="0" cy="0" r="3" class="c-star" />
+            <circle cx="-20" cy="-10" r="3" class="c-star" />
+            <circle cx="20" cy="-10" r="4" class="c-star c-star-main" />
+            <circle cx="20" cy="10" r="3" class="c-star" />
+            <circle cx="-20" cy="10" r="3" class="c-star" />
+          </svg>
+          <div class="star-card">
+            <div class="timeline-era" style="color: #9ca3af">
+              Era II — Os Construtores
+            </div>
+            <div class="timeline-date">Milênios Após a Chama</div>
+            <p>
+              Civilizações ergueram-se das cinzas. Os Construtores cavaram as
+              Catacumbas Sombrias como santuários de culto, ergueram altares nas
+              profundezas, e domaram os monstros primitivos. Seu conhecimento
+              era vasto, mas sua arrogância seria sua ruína.
+            </p>
+            <div
+              class="timeline-tag"
+              style="background: rgba(156, 163, 175, 0.15); color: #9ca3af"
+            >
+              🏗️ Civilização
+            </div>
+          </div>
+        </div>
+
+        <!-- ERA 3: A Serpente (Serpent) -->
+        <div
+          class="constellation-cluster"
+          style="left: 70%; top: 25%; --glow-color: #10b981"
+        >
+          <svg viewBox="-50 -50 100 100" class="cluster-svg">
+            <polyline
+              points="-30,30 -10,10 10,30 30,10 40,-10 20,-20 15,0"
+              class="c-line"
+            />
+            <circle cx="-30" cy="30" r="2" class="c-star" />
+            <circle cx="-10" cy="10" r="3" class="c-star" />
+            <circle cx="10" cy="30" r="3" class="c-star" />
+            <circle cx="30" cy="10" r="3" class="c-star" />
+            <circle cx="40" cy="-10" r="4" class="c-star c-star-main" />
+            <circle cx="20" cy="-20" r="3" class="c-star" />
+            <circle cx="15" cy="0" r="2" class="c-star" />
+          </svg>
+          <div class="star-card card-left">
+            <div class="timeline-era" style="color: #10b981">
+              Era III — A Grande Corrupção
+            </div>
+            <div class="timeline-date">A Queda dos Construtores</div>
+            <p>
+              A ganância dos Construtores rompeu os selos do Vazio. Das
+              fissuras, um miasma pútrido inundou as terras, transformando lagos
+              em pântanos tóxicos. A Bruxa Vex surgiu como avatar da
+              pestilência, e a Hidra Corrompida nasceu da lama ancestral. O
+              Pântano da Peste cresceu, consumindo reino após reino.
+            </p>
+            <div
+              class="timeline-tag"
+              style="background: rgba(16, 185, 129, 0.15); color: #10b981"
+            >
+              🤢 Pestilência
+            </div>
+          </div>
+        </div>
+
+        <!-- ERA 4: O Tridente Profano (Pitchfork) -->
+        <div
+          class="constellation-cluster"
+          style="left: 85%; top: 60%; --glow-color: #ef4444"
+        >
+          <svg viewBox="-50 -50 100 100" class="cluster-svg">
+            <polyline points="0,40 0,-10" class="c-line" />
+            <polyline points="-20,-30 -20,0 0,-10 20,0 20,-30" class="c-line" />
+            <polyline points="0,-10 0,-40" class="c-line" />
+            <circle cx="0" cy="40" r="2" class="c-star" />
+            <circle cx="0" cy="-10" r="4" class="c-star c-star-main" />
+            <circle cx="-20" cy="-30" r="3" class="c-star" />
+            <circle cx="-20" cy="0" r="2" class="c-star" />
+            <circle cx="20" cy="0" r="2" class="c-star" />
+            <circle cx="20" cy="-30" r="3" class="c-star" />
+            <circle cx="0" cy="-40" r="3" class="c-star" />
+          </svg>
+          <div class="star-card card-left">
+            <div class="timeline-era" style="color: #ef4444">
+              Era IV — O Fogo Profano
+            </div>
+            <div class="timeline-date">A Forja Cai</div>
+            <p>
+              Demônios emergiram dos fluxos de magma, corrompendo a Grande Forja
+              Ancestral. O Ferreiro Maldito transformou cada martelo em
+              instrumento de destruição. As Cavernas de Magma tornaram-se um
+              inferno vivo, e a Floresta das Sombras queimou por séculos.
+            </p>
+            <div
+              class="timeline-tag"
+              style="background: rgba(239, 68, 68, 0.15); color: #ef4444"
+            >
+              🔨 Corrupção
+            </div>
+          </div>
+        </div>
+
+        <!-- ERA 5: Floco de Neve Eterno (Snowflake) -->
+        <div
+          class="constellation-cluster"
+          style="left: 55%; top: 75%; --glow-color: #38bdf8"
+        >
+          <svg viewBox="-50 -50 100 100" class="cluster-svg">
+            <line x1="0" y1="0" x2="0" y2="-30" class="c-line" />
+            <line x1="0" y1="0" x2="25" y2="-15" class="c-line" />
+            <line x1="0" y1="0" x2="25" y2="15" class="c-line" />
+            <line x1="0" y1="0" x2="0" y2="30" class="c-line" />
+            <line x1="0" y1="0" x2="-25" y2="15" class="c-line" />
+            <line x1="0" y1="0" x2="-25" y2="-15" class="c-line" />
+            <circle cx="0" cy="0" r="4" class="c-star c-star-main" />
+            <circle cx="0" cy="-30" r="2" class="c-star" />
+            <circle cx="25" cy="-15" r="2" class="c-star" />
+            <circle cx="25" cy="15" r="2" class="c-star" />
+            <circle cx="0" cy="30" r="2" class="c-star" />
+            <circle cx="-25" cy="15" r="2" class="c-star" />
+            <circle cx="-25" cy="-15" r="2" class="c-star" />
+          </svg>
+          <div class="star-card">
+            <div class="timeline-era" style="color: #38bdf8">
+              Era V — O Grande Congelamento
+            </div>
+            <div class="timeline-date">O Dragão Desperta</div>
+            <p>
+              Das profundezas cristalinas do mundo, X'rphan, o Dragão Branco,
+              despertou. Seu sopro congelou cavernas inteiras, criando o Abismo
+              de Cristal. Ele selou passagens antigas com gelo eterno e guardou
+              segredos dos Primeiros em seu covil.
+            </p>
+            <div
+              class="timeline-tag"
+              style="background: rgba(56, 189, 248, 0.15); color: #38bdf8"
+            >
+              ❄️ Gelo Eterno
+            </div>
+          </div>
+        </div>
+
+        <!-- ERA 6: O Olho (The Eye) -->
+        <div
+          class="constellation-cluster"
+          style="left: 20%; top: 65%; --glow-color: #a855f7"
+        >
+          <svg viewBox="-50 -50 100 100" class="cluster-svg">
+            <polyline points="-30,0 0,-20 30,0 0,20 -30,0" class="c-line" />
+            <circle cx="-30" cy="0" r="2" class="c-star" />
+            <circle cx="0" cy="-20" r="3" class="c-star" />
+            <circle cx="30" cy="0" r="2" class="c-star" />
+            <circle cx="0" cy="20" r="3" class="c-star" />
+            <circle cx="0" cy="0" r="4" class="c-star c-star-main" />
+          </svg>
+          <div class="star-card">
+            <div class="timeline-era" style="color: #a855f7">
+              Era VI — O Eclipse Presente
+            </div>
+            <div class="timeline-date">Agora</div>
+            <p>
+              The Gleam Eyes emergiu dos Corredores do Eclipse — uma entidade
+              cujo olhar devorou a luz do sol. Os Nephalem, descendentes
+              esquecidos dos Primeiros, despertam. Você é um deles. Sua jornada
+              é a busca pela Primeira Chama para reacender o mundo.
+            </p>
+            <div
+              class="timeline-tag"
+              style="background: rgba(168, 85, 247, 0.15); color: #a855f7"
+            >
+              👁️ Sua Era
+            </div>
+          </div>
+        </div>
+
+        <!-- ERA 7: O Segredo Supremo (The Crown) -->
+        <div
+          class="constellation-cluster"
+          id="era-secreta"
+          style="left: 45%; top: 45%; --glow-color: #fbbf24; display: none"
+        >
+          <svg viewBox="-50 -50 100 100" class="cluster-svg">
+            <polyline points="-30,20 30,20" class="c-line" />
+            <polyline
+              points="-30,20 -40,-10 -15,0 0,-30 15,0 40,-10 30,20"
+              class="c-line"
+            />
+            <circle cx="-30" cy="20" r="2" class="c-star" />
+            <circle cx="30" cy="20" r="2" class="c-star" />
+            <circle cx="-40" cy="-10" r="3" class="c-star" />
+            <circle cx="-15" cy="0" r="2" class="c-star" />
+            <circle cx="0" cy="-30" r="4" class="c-star c-star-main" />
+            <circle cx="15" cy="0" r="2" class="c-star" />
+            <circle cx="40" cy="-10" r="3" class="c-star" />
+          </svg>
+          <div
+            class="star-card"
+            style="cursor: pointer"
+            onclick="claimUltimateLoreSecret()"
+          >
+            <div class="timeline-era" style="color: #fbbf24; font-weight: bold">
+              Era VII — A Chama Renascida
+            </div>
+            <div class="timeline-date">O Futuro Desperto</div>
+            <p>
+              O conhecimento absoluto abriu as portas do destino. Você domou a
+              história e os Primeiros o reconhecem como o sucessor legítimo.
+              <br /><br /><strong
+                style="color: #fbbf24; display: block; text-align: center"
+                >✦ Reivindicar Dádiva dos Primeiros ✦</strong
+              >
+            </p>
+            <div
+              class="timeline-tag"
+              style="background: rgba(251, 191, 36, 0.25); color: #fbbf24"
+            >
+              🌟 Ascensão
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ABA 6: DIÁRIO -->
+    <div id="diario" class="tab-content">
+      <div class="diary-wrapper">
+        <div class="diary-parchment">
+          <div class="diary-header">
+            <h2>O Livro de Memórias</h2>
+            <p>Relatos do Herdeiro das Sombras...</p>
+          </div>
+
+          <div id="diary-feed" class="diary-feed-container">
+            <!-- Feed entries will be injected here -->
+          </div>
+
+          <div class="diary-input-section">
+            <textarea
+              id="adventure-diary-input"
+              placeholder="Mergulhe a pena na tinta e escreva..."
+              class="diary-textarea"
+            ></textarea>
+            <div class="diary-seal-container">
+              <button class="diary-seal-btn" onclick="addManualDiaryEntry()">
+                <span class="seal-icon">🩸</span>
+                <span class="seal-text">Assinar com Sangue</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA 6: RELÍQUIAS FALANTES -->
+    <div id="reliquias" class="tab-content">
+      <div id="relics-header" style="margin-bottom: 16px"></div>
+      <div class="grid-container" id="relics-container"></div>
+    </div>
+
+    <script type="module" src="/src/lore.js"></script>
+  </body>
+</html>

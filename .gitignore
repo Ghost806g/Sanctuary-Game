@@ -1,0 +1,42 @@
+# Godot
+.godot/
+*.translation
+export_presets.cfg
+*.import
+
+# Secrets
+.env
+.env.*
+
+# Node
+node_modules/
+dist/
+*.log
+*.node
+
+# Tauri / Rust
+src-tauri/target/
+**/*.rs.bk
+
+# C++
+build/
+*.o
+*.obj
+*.exe
+*.dll
+
+# Assets & Heavy Files
+*.zip
+*.rar
+*.7z
+*.pdb
+*.ilk
+
+# IDEs
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
