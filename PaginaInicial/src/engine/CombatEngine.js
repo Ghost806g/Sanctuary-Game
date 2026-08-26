@@ -2,7 +2,7 @@
 // COMBAT ENGINE EXTRACTED FROM MAIN_V3
 // ==========================================
 
-function initCombatInstance(isBoss) {
+function initCombatInstance(isBoss, forceElite = false) {
   const h = getActiveHero();
   heroCombatState = { statuses: [], defBuff: 0, atkBuff: 0, dodge: 0, activeMinions: [] };
   // Reset combo e stats da run
@@ -77,7 +77,7 @@ function initCombatInstance(isBoss) {
 
     // ================= NOVO: SISTEMA DE SUFIXOS DE ELITE =================
     activeCombatInstance.affixes = [];
-    if (lvl >= 5 && Math.random() /* nosonar */ < 0.25) {
+    if (forceElite || (lvl >= 5 && Math.random() /* nosonar */ < 0.25)) {
       const possibleAffixes = [
         { id: "vampiric", name: "Vampírico" },
         { id: "armored", name: "Blindado" },
@@ -436,10 +436,8 @@ window.castCombatSkill = function (skillId) {
       hero.foco = f - sk.cost;
     } else {
       // Classes mágicas e divinas (Necromante, Arcanista, Paladino - Custo base de Mana)
-      if (hero.class === "Necromante" && sk.id === "n5") {
-         if ((hero.almas || 0) < 20) {
-            return triggerToast("Você precisa de 20 Almas para forjar a Armadura de Ossos!");
-         }
+      if (hero.class === "Necromante" && sk.id === "n5" && (hero.almas || 0) < 20) {
+        return triggerToast("Você precisa de 20 Almas para forjar a Armadura de Ossos!");
       }
       
       let finalCost = sk.cost;
@@ -798,28 +796,8 @@ function _applyBiomeMagicImpact(currentDmg, skillObj) {
      if (skillObj.type === "Gelo") return currentDmg * 1.5;
   }
   
-  if (bName.includes("pântano") || bName.includes("pantano") || bName.includes("agua") || bName.includes("água")) {
-     if (skillObj.type === "Raio") return currentDmg * 1.5;
-  }
-
-  return currentDmg;
-}
-
-function _applyBiomeMagicImpact(currentDmg, skillObj) {
-  if (!skillObj || !skillObj.type) return currentDmg;
-  
-  const biome = typeof getCurrentBiome === "function" ? getCurrentBiome() : null;
-  if (!biome || !biome.name) return currentDmg;
-
-  const bName = biome.name.toLowerCase();
-  
-  if (bName.includes("tundra") || bName.includes("gelo") || bName.includes("congelada")) {
-     if (skillObj.type === "Fogo") return currentDmg * 0.5;
-     if (skillObj.type === "Gelo") return currentDmg * 1.5;
-  }
-  
-  if (bName.includes("pântano") || bName.includes("pantano") || bName.includes("agua") || bName.includes("água")) {
-     if (skillObj.type === "Raio") return currentDmg * 1.5;
+  if (bName.includes("pântano") || bName.includes("pantano") || bName.includes("agua") || bName.includes("água") && skillObj.type === "Raio") {
+    return currentDmg * 1.5;
   }
 
   return currentDmg;
@@ -866,11 +844,7 @@ function _calcHeroFinalDmg(hero, calc, skillObj, enemy, rawDmg, d20) {
     critChance = traitCrit / 100;
   }
 
-  if (
-    !isExhausted &&
-    (Math.random() /* nosonar */ < critChance || d20 === 20 || heroCombatState.rangerHeadshot) &&
-    finalDmg > 0
-  ) {
+  if ((!isExhausted &&(Math.random() /* nosonar */ < critChance || d20 === 20 || heroCombatState.rangerHeadshot) && finalDmg > 0)) {
     finalDmg *= calc.passives.critDamage;
     if (d20 === 20) {
       finalDmg *= 1.5;
@@ -915,16 +889,13 @@ function _calcHeroFinalDmg(hero, calc, skillObj, enemy, rawDmg, d20) {
            finalDmg *= 0.5;
            appendTerminalLog(`⚠️ Na retaguarda, ataques corpo a corpo são fracos e imprecisos!`, "danger");
         }
-     } else if (hero.class === "Ranger" || hero.class === "Arcanista" || hero.class === "Necromante") {
-        if (skillObj && skillObj.type || hero.class === "Ranger") {
-           finalDmg *= 1.25;
-           heroAccuracy += 0.1;
-        }
+     } else if ((hero.class === "Ranger" || hero.class === "Arcanista" || hero.class === "Necromante")&& (skillObj && skillObj.type || hero.class === "Ranger")) {
+        finalDmg *= 1.25;
+        heroAccuracy += 0.1;
      }
-  } else { // Vanguarda (default)
+  } else {
      if (hero.class === "Ranger" || hero.class === "Arcanista" || hero.class === "Necromante") {
         heroAccuracy -= 0.15;
-        // não printa toda hora pra não spamar, mas a precisão é menor
      }
   }
 
@@ -1039,53 +1010,6 @@ function _calcHeroFinalDmg(hero, calc, skillObj, enemy, rawDmg, d20) {
   }
   
   return finalDmg;
-}
-
-function _processSanitySystem(hero) {
-  // Apenas monstros formidáveis causam dano de sanidade
-  const isFormidable = activeCombatInstance.lvl >= 5 || activeCombatInstance.type === "boss" || (activeCombatInstance.tags && activeCombatInstance.tags.elite);
-  if (!isFormidable) return;
-  if (heroCombatState.determinationTested) return;
-
-  // Dano Base de Sanidade
-  hero.sanity = Math.max(0, (hero.sanity || 100) - (Math.floor(Math.random() * 8) + 4));
-
-  if (hero.sanity > 0) return;
-
-  // --- INTERVENÇÃO DIVINA (PALADINO) ---
-  if (hero.class === "Paladino" && (hero.fe || 0) >= 100) {
-      hero.fe = 0;
-      hero.sanity = hero.maxSanity || 100;
-      appendTerminalLog("☀️ A LUZ PREVALECE! Sua Fé Intocável purificou as trevas de sua mente! (100 de Fé consumidos)", "reward");
-      triggerScreenShake();
-      return;
-  }
-
-  // --- TRANSFERÊNCIA DE LOUCURA (NECROMANTE) ---
-  if (hero.class === "Necromante" && heroCombatState.activeMinions && heroCombatState.activeMinions.length > 0) {
-      const sac = heroCombatState.activeMinions.shift();
-      hero.sanity = hero.maxSanity || 100;
-      appendTerminalLog(`💀 LOUCURA TRANSFERIDA! Você despejou seu terror na mente do ${sac.name}!`, "reward");
-      triggerScreenShake();
-      return;
-  }
-
-  // --- TESTE DE DETERMINAÇÃO PADRÃO ---
-  heroCombatState.determinationTested = true;
-  const isVirtuous = Math.random() < 0.35; // 35% Virtude
-
-  if (isVirtuous) {
-      appendTerminalLog("🌟 TESTE DE DETERMINAÇÃO: VIRTUDE! Você encontrou força no desespero!", "reward");
-      heroCombatState.atkBuff = (heroCombatState.atkBuff || 0) + 50;
-      heroCombatState.defBuff = (heroCombatState.defBuff || 0) + 50;
-      hero.sanity = hero.maxSanity || 100;
-  } else {
-      appendTerminalLog("💀 TESTE DE DETERMINAÇÃO: AFLIÇÃO! A loucura tomou conta da sua mente!", "danger");
-      heroCombatState.atkBuff = (heroCombatState.atkBuff || 0) - 30;
-      heroCombatState.defBuff = (heroCombatState.defBuff || 0) - 30;
-  }
-  
-  triggerScreenShake();
 }
 
 function _processSanitySystem(hero) {
