@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const ALL_MATERIALS = [
   {
     id: "ferro",
@@ -4845,36 +4846,6 @@ window.LOOT_ICONS = {
   ],
 };
 
-window.assignLootIcon = function (item, heroClass = "Guerreiro") {
-  if (!window.LOOT_ICONS) return item;
-  const icons = window.LOOT_ICONS;
-
-  let pool = [];
-  if (item.type === "lore_fragment" || item.type === "book") {
-    if (icons.books && icons.books.length) pool = icons.books;
-  } else if (item.rarity === "Mitico" || item.rarity === "Deus") {
-    if (icons.dragon && icons.dragon.length) pool = icons.dragon;
-  } else if (item.type === "arma") {
-    if (heroClass === "Arcanista" && icons.staves && icons.staves.length)
-      pool = icons.staves;
-    else if (heroClass === "Ranger" && icons.daggers && icons.daggers.length)
-      pool = icons.daggers;
-    else if (icons.swords && icons.swords.length) pool = icons.swords;
-  } else if (item.type === "escudo") {
-    if (icons.shields && icons.shields.length) pool = icons.shields;
-  } else if (
-    ["capacete", "armadura", "luvas", "botas"].includes(item.type) &&
-    icons.armors &&
-    icons.armors.length
-  ) {
-    pool = icons.armors;
-  }
-
-  if (pool.length > 0) {
-    item.icon = pool[Math.floor(Math.random() * pool.length)];
-  }
-  return item;
-};
 
 // PATCH: Assinalar icones aleatórios/específicos para habilidades sem ícone
 if (window.LOOT_ICONS) {
