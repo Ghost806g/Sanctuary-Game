@@ -1,6 +1,7 @@
 // =========================================================================
 // SISTEMA DE TRAÇOS DO HERÓI (RAÇAS, CLASSES E PROFISSÕES)
 // =========================================================================
+/* eslint-disable no-unused-vars */
 
 const HeroTraits = {
   // Helpers
