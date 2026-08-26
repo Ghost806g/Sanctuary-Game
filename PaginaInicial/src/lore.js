@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/cognitive-complexity */
 import {
   initGemini,
   fetchFullMobLore,
@@ -1865,7 +1866,6 @@ const LORE_DB = {
 };
 
 const GAME_SAVE_KEY = "SANCTUARY_APEX_V5";
-let currentBestiaryBiome = null;
 let pendingFragmentToHighlight = null;
 let pendingFragmentLabel = null;
 let currentMemoryFilter = "all";
@@ -1940,10 +1940,6 @@ function getSavedKillCount(savedKills, mob) {
   return null;
 }
 
-function setBestiaryBiome(biome) {
-  currentBestiaryBiome = biome;
-  renderBestiary();
-}
 
 function getSaveInfoText(saveInfo) {
   if (!saveInfo.heroName) {
@@ -2136,68 +2132,9 @@ function playPaperSound() {
     filter.connect(gainNode);
     gainNode.connect(ctx.destination);
     noiseSource.start();
-  } catch (e) {}
-}
-
-function generateDeepLore(mob, type) {
-  if (type === "lore" && mob.lore && !mob.lore.includes("apenas em contos"))
-    return mob.lore;
-
-  const isBoss = mob.category === "boss";
-  const isElite = mob.category === "elite";
-
-  const origins = {
-    "Catacumbas Sombrias":
-      "Nasceu das sombras podres das criptas esquecidas. O ar gélido e o cheiro de morte moldaram sua essência, forçando uma evolução bizarra para sobreviver à ausência de luz.",
-    "Pântano da Peste":
-      "Uma aberração criada pelo lodo tóxico e águas venenosas. Cada célula de seu corpo carrega a praga ancestral que dizimou os primeiros habitantes do brejo.",
-    "Forja Profana do Abismo":
-      "Forjado literalmente nas chamas do inferno. O metal derretido e o fogo negro se fundiram à sua carne, criando uma máquina de matar movida a ódio puro.",
-    "Cavernas de Magma":
-      "Eclodiu das profundezas escaldantes da montanha. Seu sangue é magma líquido e sua respiração queima o oxigênio ao redor.",
-    "Floresta das Sombras":
-      "A natureza corrompida deu vida a este pesadelo. Entre raízes apodrecidas e neblina densa, aprendeu a ser o caçador perfeito na escuridão.",
-    "Abismo de Cristal":
-      "Uma anomalia cristalina. O frio absoluto do abismo congelou seu coração, substituindo-o por um núcleo de pura energia mágica e impiedosa.",
-    "Corredores do Eclipse":
-      "Uma criatura gerada pelo rasgo entre dimensões. Não pertence a este mundo, alimentando-se do vazio e da escuridão eterna.",
-  };
-
-  const ecologys = {
-    boss: "Sua presença afeta a própria realidade ao redor. Criaturas menores fogem ou enlouquecem, enquanto o clima se distorce para refletir sua fúria impiedosa e sede de sangue. Não há negociação, apenas sobrevivência.",
-    elite:
-      "Caça solitário ou lidera bandos de bestas menores, exigindo sacrifícios contínuos. É um predador alfa implacável, cujo território é sempre demarcado por restos mortais carbonizados ou dilacerados.",
-    comum:
-      "Age puramente por instinto e fome canibal. Costuma emboscar desavisados nas áreas mais obscuras de seu habitat, aproveitando-se do número ou do relevo para despedaçar a presa.",
-    monster:
-      "Age puramente por instinto e fome canibal. Costuma emboscar desavisados nas áreas mais obscuras de seu habitat, aproveitando-se do número ou do relevo para despedaçar a presa.",
-  };
-
-  const anatomys = [
-    "Sua estrutura interna desafia a biologia convencional. Músculos hipertrofiados são fundidos diretamente a cartilagens espinhosas incrustadas com magia sombria.",
-    "Órgãos vitais são protegidos por uma crosta espessa, enquanto vasos sanguíneos escuros pulsam visivelmente sob a pele, bombeando toxinas ou calor.",
-    "Seu sistema nervoso aberrante reage quase instantaneamente à intenção assassina, tornando seus reflexos assustadoramente rápidos, superando até guerreiros treinados.",
-  ];
-
-  const weaknessText = [
-    "Estudos de caçadores veteranos sugerem que impactos brutais e concentrados em suas articulações inferiores quebram sua postura de forma definitiva.",
-    "Apesar de ser brutal e aterrorizante, o monstro demonstra profunda hesitação a encantamentos puros baseados em forças opostas ao seu bioma natal.",
-    "Diários recuperados relatam que a exaustão física prolongada é sua única ruína. Prolongar o combate através de esquivas metódicas é a chave absoluta para a vitória.",
-  ];
-
-  if (type === "lore")
-    return `${isBoss ? "Uma calamidade viva que assombra o Santuário. " : ""}${origins[mob.biome] || "Surgiu das terríveis anomalias de energia escura que banham o Santuário."} Sobreviventes afirmam que a mera visão desta criatura basta para congelar o sangue nas veias.`;
-  if (type === "origin")
-    return (
-      origins[mob.biome] ||
-      "Documentos antigos sugerem origens terríveis encobertas por lendas obscuras que a Igreja apagou."
-    );
-  if (type === "ecology") return ecologys[mob.category] || ecologys["monster"];
-  if (type === "anatomy") return anatomys[Math.abs(mob.status.hp || 1) % 3];
-  if (type === "weakness")
-    return weaknessText[Math.abs(mob.status.atk || 1) % 3];
-
-  return "Informação rasgada e ilegível.";
+  } catch (e) {
+    console.warn("Audio não suportado", e);
+  }
 }
 
 function renderBestiary() {
@@ -2358,11 +2295,6 @@ function renderMemories() {
           (item) => item.fragmentId === fragmentId,
         );
         const isRead = readList.includes(fragmentId);
-        const statusLabel = isRead
-          ? "Lido"
-          : hasItem
-            ? "Pronto para colocar"
-            : "Fragmento perdido";
         const statusClass = isRead ? "read" : hasItem ? "novel" : "lost";
         let descText = fragmentDef.desc;
         if (!isRead && !hasItem) {
@@ -2869,7 +2801,7 @@ window.onload = () => {
   }
 
   if (pendingFragmentToHighlight) {
-    const highlightTimeout = setTimeout(() => {
+    setTimeout(() => {
       const node = document.querySelector(".memory-page.highlighted-memory");
       if (node) {
         node.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -3492,8 +3424,6 @@ if (typeof handlePendingFragmentFromUrl === "function")
 if (typeof renderMap === "function") window.renderMap = renderMap;
 if (typeof setMemoryFilter === "function")
   window.setMemoryFilter = setMemoryFilter;
-if (typeof setBestiaryBiome === "function")
-  window.setBestiaryBiome = setBestiaryBiome;
 if (typeof increaseAffinity === "function")
   window.increaseAffinity = increaseAffinity;
 if (typeof closeMapPanel === "function") window.closeMapPanel = closeMapPanel;
@@ -3554,4 +3484,4 @@ window.addEventListener("keydown", async (e) => {
       console.warn("Erro ao mudar tela cheia:", err);
     }
   }
-});
+})
