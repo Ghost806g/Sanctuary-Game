@@ -22,7 +22,7 @@
   "rules": {
     "no-undef": "off",
     "no-unused-vars": "warn",
-    "sonarjs/no-duplicate-string": "warn",
+    "sonarjs/no-duplicate-string": "off",
     "sonarjs/cognitive-complexity": "warn",
     "no-empty": "warn",
     "no-constant-condition": "warn"
