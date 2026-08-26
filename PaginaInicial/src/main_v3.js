@@ -935,7 +935,6 @@ window.writeAutoDiary = async function (payload, type = "auto") {
 };
 
 // ====================== TOOLTIP FLUTUANTE DETALHADO ======================
-const currentTooltipTimeout = null;
 
 function showItemTooltip(item, e) {
   const tooltip = document.getElementById("item-tooltip");
@@ -1215,8 +1214,7 @@ function generateFloatingText(amount, type = "damage", target = "center") {
   floater.innerText = `${prefix}${amount}`;
 
   let startX, startY;
-  const heroCard = document.getElementById("player-card"); // or use class .player-card
-  const enemyCard = document.getElementById("enemy-card"); // or use class .enemy-card
+
   const hRect = document.querySelector('.player-card')?.getBoundingClientRect();
   const eRect = document.querySelector('.enemy-card')?.getBoundingClientRect();
 
@@ -3329,8 +3327,8 @@ function executeBlacksmithForge() {
 }
 
 function executeAdvancedForge() {
-  const tier = document.getElementById("forge-tier-select").value;
-  const focus = document.getElementById("forge-focus-select").value; // Novo: Foco
+  document.getElementById("forge-tier-select").value;
+  document.getElementById("forge-focus-select").value; // Novo: Foco
 }
 
 // ====================== NOVO: UPGRADE DE ITENS ======================
@@ -3353,8 +3351,8 @@ function renderUpgradeInventory() {
     return;
   }
 
-  upgradable.forEach((item, globalIndex) => {
-    const realIndex = hero.inventory.indexOf(item);
+  upgradable.forEach((item) => {
+    hero.inventory.indexOf(item);
     const costGold = Math.floor(item.power * 1.8 + 60);
     const costMat = Math.floor(item.power / 4) + 5;
 
@@ -3533,7 +3531,7 @@ function renderEnchantInventory() {
     return;
   }
 
-  enchantable.forEach((item, idx) => {
+  enchantable.forEach((item) => {
     const realIndex = hero.inventory.indexOf(item);
     container.innerHTML += `
             <div class="item-card rare-${item.rarity}" style="margin-bottom:12px;">
@@ -3688,14 +3686,14 @@ function renderSocketInventory() {
     (item) => !item.type.includes("consumivel"),
   );
 
-  socketable.forEach((item, idx) => {
+  socketable.forEach((item) => {
     const realIndex = hero.inventory.indexOf(item);
     if (!item.sockets) {
       addSocketsToItem(item);
     }
 
     let socketsHTML = "";
-    item.sockets.forEach((rune, sIdx) => {
+    item.sockets.forEach((rune) => {
       socketsHTML += `
                 <div style="display:inline-block; width:48px; height:48px; border:2px dashed #666; margin:2px; border-radius:6px; background:#111; text-align:center; line-height:44px; font-size:1.4rem;">
                     ${rune ? "⚡" : "◌"}
@@ -3718,8 +3716,6 @@ function renderSocketInventory() {
         `;
   });
 }
-
-const selectedItemForRune = null;
 
 window.openRuneInsertion = function (invIndex) {
   const hero = getActiveHero();
@@ -3919,7 +3915,7 @@ function renderRepairMesh() {
     return;
   }
 
-  brokenItems.forEach((item, idx) => {
+  brokenItems.forEach((item) => {
     const realIndex = hero.inventory.indexOf(item);
     const maxDur = item.maxDurability || 100;
     const cost = Math.floor((maxDur - item.durability) * 1.8);
@@ -4189,37 +4185,7 @@ window.clearCompletedQuests = function () {
   }
 };
 
-// =========================================================================
-//  ENGINE DE COMBATE E MASMORRAS (STATUS EFFECTS E PÓS-BOSS SAFE ROOM)
-// =========================================================================
-const MONSTER_DATABASE = {
-  1: { n: "Esqueleto Amaldiçoado de Prata", hp: 80, atk: 12, type: "Físico" },
-  2: { n: "Demônio Escarlate Inferior", hp: 150, atk: 25, type: "Fogo" },
-  3: { n: "Gárgula de Gelo Perfeito", hp: 300, atk: 45, type: "Gelo" },
-  4: { n: "Víbora Fantasma Profana", hp: 600, atk: 75, type: "Profano" },
-};
 
-const BOSS_DATABASE = {
-  5: {
-    n: "Rei Esqueleto Ancestral (Senhor dos Ossos)",
-    hp: 800,
-    atk: 55,
-    type: "Profano",
-  },
-  10: {
-    n: "O Açougueiro Carniceiro Abissal",
-    hp: 1800,
-    atk: 110,
-    type: "Físico",
-  },
-  15: { n: "Belial, Avatar Mentiroso", hp: 4000, atk: 190, type: "Fogo" },
-  20: {
-    n: "DIABLO, O ABSOLUTO MAL SUPREMO",
-    hp: 10000,
-    atk: 350,
-    type: "Fogo",
-  },
-};
 
 
 function renderDungeonTab() {
