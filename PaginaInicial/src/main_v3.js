@@ -2539,19 +2539,6 @@ function renderFichaTab(calc) {
     }
   }
 
-  const necroContainer = document.getElementById("necromancer-book-container");
-  if (necroContainer) {
-    if (hero.class === "Necromante") {
-      necroContainer.innerHTML = `
-        <button class="btn btn-magic" style="width: 100%; margin-bottom: 25px; padding: 15px; font-size: 1.2rem; border-color: #c084fc; color: #e9d5ff;" onclick="openNecromancyBook()">
-          💀 Abrir Livro dos Mortos
-        </button>
-      `;
-    } else {
-      necroContainer.innerHTML = "";
-    }
-  }
-
   const attrBox = document.getElementById("attributes-allocation-engine");
   attrBox.innerHTML = _buildAttributesHtml(hero);
 
