@@ -1,6 +1,7 @@
 // =========================================================================
 //  CONSTANTES GLOBAIS DE ESTATÍSTICAS E TIPOS (SonarLint Fix S1192)
 // =========================================================================
+/* eslint-disable no-unused-vars */
 
 const STAT_FORCA = "forca";
 const STAT_INT = "inteligencia";
