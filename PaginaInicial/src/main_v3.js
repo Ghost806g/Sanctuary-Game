@@ -1278,7 +1278,7 @@ function appendTerminalLog(text, classType = "normal") {
   entry.className = "floating-log-entry";
   entry.style.color = color;
   entry.style.borderColor = borderColor;
-  entry.textContent = text.replace(/[▶►⚔️🛡️⚡🔨✨💀☠️🩸⬅️⬆️➡️]/g, "").trim();
+  entry.textContent = text.replace(/[▶►⚔️🛡️⚡🔨✨💀☠️🩸⬅️⬆️➡️]/gu, "").trim();
   container.appendChild(entry);
 
   // Limit to 5 visible notifications
