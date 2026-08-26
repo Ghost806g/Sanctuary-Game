@@ -1278,6 +1278,7 @@ function appendTerminalLog(text, classType = "normal") {
   entry.className = "floating-log-entry";
   entry.style.color = color;
   entry.style.borderColor = borderColor;
+  // eslint-disable-next-line no-misleading-character-class
   entry.textContent = text.replace(/[▶►⚔️🛡️⚡🔨✨💀☠️🩸⬅️⬆️➡️]/gu, "").trim();
   container.appendChild(entry);
 
