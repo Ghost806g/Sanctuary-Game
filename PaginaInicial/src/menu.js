@@ -1193,19 +1193,6 @@ function selectCard(card, key, selectionKey, nextPhase, containerId, database) {
   }
 }
 
-// ===================== FASE 4 — ESCOLHA DE PROFISSÃO =====================
-
-function setupProfPhase() {
-  document.getElementById("ritual-phase-3").classList.remove("active");
-  document.getElementById("ritual-phase-4").classList.add("active");
-
-  // Buscar a classe selecionada
-  let cls = ritualState.selectedClass;
-  if (cls === "Bárbaro") cls = "Barbaro";
-
-  const classProfessions = PROFESSION_DATABASE[cls] || {};
-  generateCards(classProfessions, ID_CONTAINER_PROF, STATE_SELECTED_PROF, 5);
-}
 
 // ===================== FASE 5 — PACTO DE SANGUE =====================
 
