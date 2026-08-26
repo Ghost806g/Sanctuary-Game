@@ -2956,11 +2956,9 @@ function upgradeSkillRank(id) {
   const hero = getActiveHero();
   const sk = MASTER_SKILLS_DATA[hero.class].find((s) => s.id === id);
 
-  if (sk && sk.reqStat) {
-     if ((hero.attributes[sk.reqStat.id] || 0) < sk.reqStat.value) {
+  if (sk && sk.reqStat && (hero.attributes[sk.reqStat.id] || 0) < sk.reqStat.value) {
         return triggerToast(`Requisito não atendido: ${sk.reqStat.id} >= ${sk.reqStat.value}`);
      }
-  }
   
   if (sk && sk.reqSkill) {
      const reqRank = hero.skills[sk.reqSkill.id] || 0;
@@ -5025,11 +5023,9 @@ function applyStatusToHero(effectObj) {
   if (!hero) return;
   
   const calc = computeLiveStats();
-  if (calc.passives.statusResist > 0) {
-    if (Math.random() < calc.passives.statusResist) {
+  if (calc.passives.statusResist > 0 && Math.random() < calc.passives.statusResist) {
       appendTerminalLog(`✨ Você RESISTIU a um efeito de [${effectObj.type.toUpperCase()}]!`, "reward");
       return;
-    }
   }
 
   heroCombatState.statuses = heroCombatState.statuses || [];
@@ -5136,10 +5132,8 @@ function applyStatusToEnemy(effectObj, skillDamage) {
     enemy.statuses.push({ type: "poison", duration: effectObj.duration, power: effectObj.power });
   } else if (effectObj.type === "bleed") {
     enemy.statuses.push({ type: "bleed", duration: effectObj.duration, power: Math.floor(skillDamage * (effectObj.ratio || 0.2)) });
-  } else if (["stun", "freeze", "blind", "armor_break"].includes(effectObj.type)) {
-    if (Math.random() < (effectObj.chance || 1.0)) {
-       enemy.statuses.push({ type: effectObj.type, duration: effectObj.duration || 1 });
-    }
+  } else if (["stun", "freeze", "blind", "armor_break"].includes(effectObj.type) &&(Math.random() < (effectObj.chance || 1.0))) {
+    enemy.statuses.push({ type: effectObj.type, duration: effectObj.duration || 1 })
   }
 }
 
@@ -5393,159 +5387,6 @@ function executeMonsterAI(enemy, hero, calc) {
     return calculateCommonAction(enemy, hero, calc, hpPercent, heroHpPercent, baseDmg);
   }
 }
-
-
-// ============================================================================
-// SISTEMA DE IA DE MONSTROS (Monster Brain Engine 2.0)
-// ============================================================================
-function getActionPool(enemy, baseDmg) {
-  return {
-    basic: { type: "attack", dmg: baseDmg, log: `O ${enemy.name} desfere um golpe rápido! (Ataque Básico)` },
-    heavy: { type: "heavy_attack", dmg: Math.floor(baseDmg * 1.5), log: `O ${enemy.name} canaliza sua fúria num Ataque Pesado brutal!` },
-    defend: { type: "defend", dmg: 0, log: `O ${enemy.name} assume uma Postura Defensiva!` },
-    debuff: { type: "debuff", dmg: Math.floor(baseDmg * 0.5), log: `O ${enemy.name} lança uma praga! (Ataque Mágico)` },
-    heal: { type: "heal", dmg: 0, log: `O ${enemy.name} regenera suas feridas! (Cura)` }
-  };
-}
-
-function selectActionWeighted(weights, actionPool) {
-  const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
-  let random = Math.random() * totalWeight;
-  let chosenAction = "basic";
-  for (let key in weights) {
-    if (random < weights[key]) {
-      chosenAction = key;
-      break;
-    }
-    random -= weights[key];
-  }
-  return actionPool[chosenAction];
-}
-
-function calculateCommonAction(enemy, hero, calc, hpPercent, heroHpPercent, baseDmg) {
-  const actionPool = getActionPool(enemy, baseDmg);
-  let weights = { basic: 60, heavy: 10, defend: 10, debuff: 10, heal: 10 };
-
-  // Consciência Situacional Básica
-  if (hpPercent >= 1.0) weights.heal = 0;
-  if (enemy.aiDefendTurn) weights.defend = 0; // Evitar defender duas vezes seguidas
-  if (heroHpPercent < 0.25) {
-    weights.heavy += 40; // Tenta finalizar se o herói estiver morrendo
-    weights.heal = 0;
-    weights.defend = 0;
-  }
-
-  return selectActionWeighted(weights, actionPool);
-}
-
-function calculateEliteAction(enemy, hero, calc, hpPercent, heroHpPercent, baseDmg) {
-  let actionPool = getActionPool(enemy, baseDmg);
-  const ai = enemy.aiType || "balanced";
-  let weights = { basic: 40, heavy: 20, defend: 10, debuff: 10, heal: 10 };
-
-  // Personalidades Distintas
-  if (ai === "aggressive") {
-    weights = { basic: 30, heavy: 50, defend: 0, debuff: 20, heal: 0 };
-    if (heroHpPercent < 0.3) weights.heavy += 60; // Bloodlust
-  } else if (ai === "defensive") {
-    weights = { basic: 40, heavy: 10, defend: 30, debuff: 0, heal: 20 };
-    if (hpPercent < 0.4) { weights.defend += 50; weights.heal += 50; }
-  } else if (ai === "caster") {
-    weights = { basic: 20, heavy: 10, defend: 10, debuff: 60, heal: 20 };
-  }
-
-  // Verificações Lógicas (Utility)
-  if (hpPercent >= 1.0) weights.heal = 0;
-  if (enemy.aiDefendTurn) weights.defend = 0;
-  
-  const isHeroPoisoned = heroCombatState.statuses && heroCombatState.statuses.some(s => s.type === "poison");
-  if (isHeroPoisoned) weights.debuff = 0; // Não gasta turno debuffando quem já tá sofrendo
-
-  // Injetar Habilidades Únicas do Elite (do Banco de Dados)
-  if (window.MONSTER_MOVESETS && window.MONSTER_MOVESETS[enemy.baseName]) {
-    const uniqueSkills = window.MONSTER_MOVESETS[enemy.baseName];
-    uniqueSkills.forEach(skill => {
-      const onCooldown = enemy.cooldowns[skill.id] && enemy.cooldowns[skill.id] > 0;
-      if (!onCooldown) {
-        actionPool[skill.id] = { type: skill.type || "heavy_attack", dmg: Math.floor(baseDmg * skill.dmgMultiplier), log: skill.log, skillId: skill.id, effect: skill.effect };
-        weights[skill.id] = skill.weight + (heroHpPercent < 0.4 ? 20 : 0); // Fica mais provável se o herói tá fraco
-      }
-    });
-  }
-
-  const chosen = selectActionWeighted(weights, actionPool);
-  if (chosen.skillId && window.MONSTER_MOVESETS[enemy.baseName]) {
-    const sk = window.MONSTER_MOVESETS[enemy.baseName].find(s => s.id === chosen.skillId);
-    if (sk) enemy.cooldowns[chosen.skillId] = sk.cooldown; // Inicia cooldown
-  }
-
-  // Adiciona a reflexão ao log
-  appendTerminalLog(`🧠 *O Elite ${enemy.name} avalia suas condições antes de agir...*`, "status");
-
-  return chosen;
-}
-
-function calculateBossAction(enemy, hero, calc, hpPercent, heroHpPercent, baseDmg) {
-  let actionPool = getActionPool(enemy, baseDmg);
-  let weights = { basic: 20, heavy: 30, defend: 10, debuff: 20, heal: 10 };
-
-  if (hpPercent >= 1.0) weights.heal = 0;
-  if (enemy.aiDefendTurn) weights.defend = 0;
-
-  // Aprendizado e Fase
-  if (!enemy.isEnraged && hpPercent <= 0.5) {
-    enemy.isEnraged = true;
-    appendTerminalLog(`💀 FÚRIA DO CHEFE! ${enemy.name} perdeu o controle! Seus atributos de ataque aumentaram em 50%!`, "danger");
-    enemy.atk = Math.floor(enemy.atk * 1.5);
-    baseDmg = Math.floor(enemy.atk * (0.9 + Math.random() * 0.2));
-    
-    // Purificar debuffs no chefe ao entrar em Enrage
-    if (activeCombatInstance.statuses) {
-      activeCombatInstance.statuses = activeCombatInstance.statuses.filter(s => s.type !== "poison" && s.type !== "burn");
-      appendTerminalLog(`🔥 A fúria purificou as aflições de ${enemy.name}!`, "danger");
-    }
-  }
-
-  if (enemy.isEnraged) {
-    weights.heavy += 50;
-    weights.basic -= 10;
-    weights.heal = 0;
-    weights.defend = 0; // Chefes em fúria não defendem
-  }
-
-  // Punição de Aprendizado: Se o herói tiver menos de 30% de HP, Boss aniquila
-  if (heroHpPercent <= 0.3) {
-    weights.heavy += 100;
-  }
-
-  // Injetar Habilidades Únicas do Boss (do Banco de Dados)
-  if (window.MONSTER_MOVESETS && window.MONSTER_MOVESETS[enemy.baseName]) {
-    const uniqueSkills = window.MONSTER_MOVESETS[enemy.baseName];
-    uniqueSkills.forEach(skill => {
-      const onCooldown = enemy.cooldowns[skill.id] && enemy.cooldowns[skill.id] > 0;
-      if (!onCooldown) {
-        actionPool[skill.id] = { type: skill.type || "heavy_attack", dmg: Math.floor(baseDmg * skill.dmgMultiplier), log: skill.log, skillId: skill.id, effect: skill.effect };
-        // Skills de Boss têm peso gigante se não estiverem em cooldown
-        weights[skill.id] = skill.weight * (enemy.isEnraged ? 2 : 1);
-      }
-    });
-  }
-
-  const chosen = selectActionWeighted(weights, actionPool);
-  if (chosen.skillId && window.MONSTER_MOVESETS[enemy.baseName]) {
-    const sk = window.MONSTER_MOVESETS[enemy.baseName].find(s => s.id === chosen.skillId);
-    if (sk) enemy.cooldowns[chosen.skillId] = sk.cooldown;
-  }
-
-  if (chosen.skillId) {
-    appendTerminalLog(`⚠️ *O Chefe ${enemy.name} está preparando uma habilidade massiva!*`, "danger");
-  }
-
-  return chosen;
-}
-
-
-
 
 // =========================================================================
 //  COMBATE ROTINAS E MOTOR DE DANO (VERSÃO CORRIGIDA E COMPLETA)
@@ -7885,13 +7726,7 @@ window.renderNecromancyBook = function() {
   const content = document.getElementById("necromancy-book-content");
   if (!content) return;
 
-  const book = hero.necromancyBook;
-
-  const buildSection = (type, title, icon, options) => {
-    let html = `<div style="background: rgba(0,0,0,0.5); border: 1px solid #333; padding: 15px; border-radius: 8px;">`;
-    html += `<h3 style="color: #e9d5ff; border-bottom: 1px solid #c084fc; padding-bottom: 5px; margin-bottom: 10px;">${icon} ${title}</h3>`;
-    html += `<div style="display: flex; flex-direction: column; gap: 10px;">`;
-    
+  const book = hero.necromancyBook;   
     options.forEach((opt, idx) => {
        const isSelected = book[type] === idx;
        const btnColor = isSelected ? "#c084fc" : "#444";
@@ -7931,11 +7766,11 @@ window.renderNecromancyBook = function() {
     { name: "Sacrifício Solitário", desc: "Não invoca Guardiões. +20 de Defesa permanentemente." }
   ];
 
-  content.innerHTML = 
+  content.innerHTML = [
     buildSection("guerreiro", "Guerreiros Esqueletos", "⚔️", guerreiroOpts) +
     buildSection("mago", "Magos Esqueletos", "🔮", magoOpts) +
-    buildSection("guardiao", "Guardiões de Ossos", "🛡️", guardiaoOpts);
-};
+    buildSection("guardiao", "Guardiões de Ossos", "🛡️", guardiaoOpts)
+  ];
 
 window.setNecromancySpecialization = function(type, idx) {
   const hero = getActiveHero();
