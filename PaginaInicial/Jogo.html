@@ -61,7 +61,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/global.css?v=13" />
-    <link rel="stylesheet" href="css/jogo_v2.css?v=23" />
+    <link rel="stylesheet" href="css/jogo_v2.css?v=24" />
     <link rel="stylesheet" href="css/lore_dark.css?v=13" />
 
     <style>
@@ -444,7 +444,7 @@
       }
       #tab-companheiros {
         background-color: #0a0304 !important;
-        background-image: url("/assets/guild_bg-Z9XlYba2.png") !important;
+        background-image: url("assets/images/guild_bg.webp") !important;
         background-size: cover !important;
         background-position: center !important;
         background-repeat: no-repeat !important;
@@ -2484,7 +2484,7 @@
           id="tab-companheiros"
           class="viewport-content hidden page-fade"
           style="
-            background: url(&quot;/assets/guild_bg-Z9XlYba2.png&quot;)
+            background: url('assets/images/guild_bg.webp')
               center/cover no-repeat;
             border-radius: 8px;
           "
@@ -2593,16 +2593,14 @@
             ></div>
 
             <!-- ACAMPAMENTO E EXPEDIÇÕES (MESA DE GUERRA 3D) -->
-            <h3
-              style="
-                color: #9ca3af;
-                margin-bottom: 15px;
-                border-bottom: 1px solid rgba(156, 163, 175, 0.3);
-                padding-bottom: 10px;
-              "
-            >
-              Acampamento & Expedições
-            </h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid rgba(156, 163, 175, 0.3); padding-bottom: 10px;">
+              <h3 style="color: #9ca3af; margin: 0;">
+                Acampamento & Expedições
+              </h3>
+              <button class="btn btn-magic" onclick="summonCompanion()" style="padding: 10px 20px; font-size: 1.1rem; border-color: #fbbf24; color: #fbbf24;">
+                <span style="font-size: 1.2rem;">✨</span> Convocar Novo Aliado (1000 🪙)
+              </button>
+            </div>
             <div
               class="tarot-container"
               style="
@@ -2688,7 +2686,7 @@
           id="tab-forge"
           class="viewport-content hidden page-fade"
           style="
-            background: url(&quot;/assets/forge_bg-BQ5SvD3L.png&quot;)
+            background: url('assets/images/forge_bg.png')
               center/cover no-repeat;
             border-radius: 8px;
           "
@@ -3158,9 +3156,12 @@
         "/src/biomeFx.js?v=5",
         "/src/engine/JuiceEngine.js",
         "/src/engine/AudioEngine.js",
+        "/src/ai_engine/Evaluators.js",
+        "/src/ai_engine/Actions.js",
+        "/src/ai_engine/UtilityAI.js",
         "/src/engine/CombatEngine.js?v=4",
         "/src/engine/InputEngine.js?v=1",
-        "/src/services/PhaserBridge.js",
+
         "/src/HeroTraitsSystem.js?v=1",
         "/src/main_v3.js?v=6",
         "/src/grimoireFX.js",
@@ -3187,21 +3188,12 @@
     </script>
     <script type="module" src="/src/dbService.js"></script>
     <script type="module">
-      import StartGame from "./src/game/main.js";
       import {
         initGemini,
         fetchDynamicFusion,
       } from "./src/services/aiService.js";
       window.fetchDynamicFusion = fetchDynamicFusion;
-      window.StartPhaserGame = StartGame;
       initGemini(import.meta.env.VITE_GEMINI_API_KEY);
-      
-      // Inicializa o Phaser após garantir que os scripts legados carregaram
-      setTimeout(() => {
-        if (window.PhaserBridge) {
-          window.PhaserBridge.init('phaser-container');
-        }
-      }, 1500);
     </script>
     <!-- Floating combat notifications container -->
     <div class="floating-log-container" id="floating-log-container"></div>
@@ -3216,7 +3208,7 @@
         </div>
       </div>
     </div>
-    <!-- Floating combat notifications container -->
-    <div class="floating-log-container" id="floating-log-container"></div>
+
+
   </body>
 </html>

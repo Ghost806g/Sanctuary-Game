@@ -257,7 +257,7 @@ function createFreshHero(name, cls, race, profession) {
         affinity: 10,
         equipped: false,
         passiveId: "cp_crit",
-        avatar: "assets/images/lyra.webp",
+        avatar: "assets/lyra.webp",
       },
     ],
     quests: [],
@@ -265,7 +265,11 @@ function createFreshHero(name, cls, race, profession) {
 }
 
 function getActiveHero() {
-  return appState.slots[appState.activeSlotIndex];
+  const hero = appState.slots[appState.activeSlotIndex];
+  if (hero && (isNaN(hero.currentHp) || hero.currentHp === null)) {
+    hero.currentHp = 100; // Será ajustado para o maxHp depois, apenas tira do estado NaN
+  }
+  return hero;
 }
 
 async function commitStorage() {
@@ -807,8 +811,17 @@ function computeLiveStats() {
     passives.evasion = traitEv / 100;
   }
 
+  // === GUILD UPGRADES ===
+  let guildHpBonus = 0;
+  let guildStaminaBonus = 0;
+  if (hero.guildUpgrades) {
+    if (hero.guildUpgrades.includes("g_upg_tenda")) guildHpBonus += 25;
+    if (hero.guildUpgrades.includes("g_upg_forja")) guildStaminaBonus += 10;
+    if (hero.guildUpgrades.includes("g_upg_mapa")) passives.critDamage += 0.05;
+  }
+
   return {
-    maxHp: Math.floor(hero.attributes.constituicao * 15 + 50 + rStats.relicHp),
+    maxHp: Math.floor(hero.attributes.constituicao * 15 + 50 + rStats.relicHp + guildHpBonus),
     maxMp: Math.floor(
       hero.attributes.inteligencia * 10 +
         20 +
@@ -816,7 +829,7 @@ function computeLiveStats() {
         rStats.relicMp +
         necroSacrificeMp
     ),
-    maxStamina: Math.floor(100 + hero.attributes.constituicao * 3),
+    maxStamina: Math.floor(100 + hero.attributes.constituicao * 3 + guildStaminaBonus),
     attack: Math.floor(
       (rawAttackScaling + compStats.gearAtk + rStats.relicAtk + necroSacrificeAtk) *
         (1 + pStats.pantheonDmgMult),
@@ -3002,33 +3015,115 @@ window.toggleSkillEquip = function (id) {
 // 4. COMPANHEIROS
 function renderCompanionsTab() {
   const hero = getActiveHero();
-  const mesh = document.getElementById("companions-mesh");
-  mesh.innerHTML = "";
-  if (hero.companions.length === 0) {
-    mesh.innerHTML = `<div style="color:var(--text-muted); font-style:italic;">Não existem almas seguidoras em seu bando de guerra. Resgate-os nos eventos aleatórios das masmorras infernais.</div>`;
+  const poolMesh = document.getElementById("companions-mesh");
+  const equippedMesh = document.getElementById("guild-equipped-mesh");
+  
+  if (!poolMesh || !equippedMesh) return;
+
+  poolMesh.innerHTML = "";
+  equippedMesh.innerHTML = "";
+
+  if (!hero.companions || hero.companions.length === 0) {
+    poolMesh.innerHTML = `<div style="color:var(--text-muted); font-style:italic; width: 100%; text-align: center;">Não existem almas seguidoras em seu bando de guerra. Resgate-os nas masmorras.</div>`;
+    renderGuildUpgrades(); // Garante renderização das melhorias
     return;
   }
 
   hero.companions.forEach((c) => {
     const passInfo = COMPANION_PASSIVES.find((p) => p.id === c.passiveId);
-    mesh.innerHTML += `
-                    <div class="comp-card ${c.equipped ? "active-comp" : ""}" onmouseenter="showCompanionTooltip({name:'${c.name.replace(/'/g, "\\'")}', desc:'${c.desc.replace(/'/g, "\\'")}', affinity:${c.affinity}, equipped:${c.equipped}}, ${passInfo ? `{desc:'${passInfo.desc.replace(/'/g, "\\'")}'}` : "null"}, event)" onmouseleave="hideCompanionTooltip()" style="display:flex; gap:15px; text-align:left;">
-                        <img src="${c.avatar}" alt="${c.name}" style="width:100px; height:150px; border-radius:4px; object-fit:cover; border:1px solid #333;" onerror="this.style.display='none'">
-                        <div style="flex:1;">
-                            <div style="font-size:1.4rem; font-family:'UnifrakturCook'; font-weight:bold; color:var(--gold-glowing); margin-bottom:5px;">${c.name}</div>
-                            <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:12px;">${c.desc}</div>
-                            <div style="font-size:0.85rem; font-weight:bold; color:var(--mana-blue);">Nível de Lealdade Vínculada: Coração Nv. ${c.affinity}</div>
-                            <div class="comp-affinity-bar"><div class="comp-affinity-fill" style="width:${Math.min(100, c.affinity)}%"></div></div>
-                            <div class="comp-passive-box">${passInfo ? passInfo.desc : "Não possui bonificadores catalogados em sua alma."}</div>
-                            <div style="display:flex; gap:10px; margin-top:15px;">
-                                <button class="btn btn-secondary btn-small" onclick="interactCompanion('${c.id}')">Sentar na Fogueira (+1 Lealdade)</button>
-                                <button class="btn btn-small" onclick="toggleCompanion('${c.id}')">${c.equipped ? "Dispensar a Retaguarda" : "Convocar para a Linha de Combate"}</button>
-                            </div>
-                        </div>
-                    </div>
+    const passDesc = passInfo ? passInfo.desc : "Sem bonificadores.";
+    
+    const cardHTML = `
+      <div class="tarot-card-3d ${c.equipped ? "equipped" : ""}" onmousemove="tiltCard(event, this)" onmouseleave="resetCardTilt(this)">
+        <div class="guild-portrait-placeholder" style="background-image: url('${c.avatar}'); background-size: cover; background-position: center;">
+          <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 4px 8px; border-radius: 4px; border: 1px solid #fbbf24; color: #fbbf24; font-size: 0.8rem; font-weight: bold; transform: translateZ(20px);">
+            Lv. ${c.affinity}
+          </div>
+        </div>
+        
+        <div class="guild-name">
+          ${c.name}
+        </div>
+        <div class="guild-desc">
+          ${c.desc}
+        </div>
+        
+        <div class="guild-stats-box">
+          <div class="guild-passive-text">${passDesc}</div>
+        </div>
+        
+        <div class="btn-container" style="display: flex; flex-direction: column; gap: 5px; margin-top: auto;">
+            <button class="btn btn-secondary btn-small" onclick="interactCompanion('${c.id}')">Sentar na Fogueira (+1 Lealdade)</button>
+            ${!c.equipped ? `<button class="btn btn-secondary btn-small" style="border-color: #34d399; color: #34d399;" onclick="exploreCompanion('${c.id}')">Enviar para Explorar</button>` : ''}
+            <button class="btn btn-small" onclick="toggleCompanion('${c.id}')">${c.equipped ? "Dispensar a Retaguarda" : "Convocar para Batalha"}</button>
+        </div>
+      </div>
     `;
+
+    if (c.equipped) {
+      equippedMesh.innerHTML += cardHTML;
+    } else {
+      poolMesh.innerHTML += cardHTML;
+    }
   });
+
+  // Renderizar Melhorias da Guilda
+  renderGuildUpgrades();
 }
+
+function tiltCard(e, card) {
+  const rect = card.getBoundingClientRect();
+  const x = e.clientX - rect.left; 
+  const y = e.clientY - rect.top; 
+  const centerX = rect.width / 2;
+  const centerY = rect.height / 2;
+  const rotateX = ((y - centerY) / centerY) * -10; 
+  const rotateY = ((x - centerX) / centerX) * 10; 
+  card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+}
+
+function resetCardTilt(card) {
+  card.style.transform = 'rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+}
+function summonCompanion() {
+  const h = getActiveHero();
+  if (h.gold < 1000) {
+    return triggerToast("Você precisa de 1000 Moedas de Ouro para realizar o ritual de invocação!");
+  }
+  
+  if (typeof COMPANION_GATCHA_POOL === "undefined") {
+    return triggerToast("As forças além deste mundo estão caladas. Nenhuma alma pôde ser contatada.");
+  }
+  
+  const unowned = COMPANION_GATCHA_POOL.filter(p => !h.companions.some(c => c.id === p.id));
+  
+  if (unowned.length === 0) {
+    return triggerToast("Não há mais almas dispostas a se juntar à sua causa neste plano.");
+  }
+  
+  h.gold -= 1000;
+  
+  const rolled = unowned[Math.floor(Math.random() * unowned.length)];
+  
+  // Create instance of companion
+  const newComp = {
+    id: rolled.id,
+    name: rolled.name,
+    desc: rolled.desc,
+    passiveId: rolled.passiveId,
+    avatar: rolled.avatar,
+    affinity: rolled.baseAffinity || 1,
+    equipped: false
+  };
+  
+  h.companions.push(newComp);
+  
+  triggerToast(`✨ RITUAL DE INVOCAÇÃO CONCLUÍDO! ${rolled.name} juntou-se à sua guilda!`);
+  triggerScreenShake();
+  commitStorage();
+  renderAllEngines();
+}
+
 function interactCompanion(id) {
   const h = getActiveHero();
   const c = h.companions.find((x) => x.id === id);
@@ -3053,10 +3148,104 @@ function toggleCompanion(id) {
   triggerToast("Formação de guerra estratégica ajustada com perfeição.");
 }
 
+const GUILD_UPGRADES_DB = [
+  { id: "g_upg_tenda", name: "Tenda Médica", desc: "+25 HP Máximo (Global)", icon: "⛺", costGold: 100, costStamina: 50 },
+  { id: "g_upg_forja", name: "Fornalha Compartilhada", desc: "+10 Estamina Máxima", icon: "🔥", costGold: 150, costStamina: 60 },
+  { id: "g_upg_mapa", name: "Mesa Cartográfica", desc: "+5% Dano Crítico", icon: "🗺️", costGold: 200, costStamina: 80 }
+];
+
+function renderGuildUpgrades() {
+  const h = getActiveHero();
+  if (!h.guildUpgrades) h.guildUpgrades = [];
+  
+  const container = document.getElementById("guild-upgrades-container");
+  if (!container) return;
+  
+  container.innerHTML = "";
+  
+  GUILD_UPGRADES_DB.forEach(upg => {
+    const purchased = h.guildUpgrades.includes(upg.id);
+    container.innerHTML += `
+      <div style="background: rgba(0,0,0,0.6); border: 1px solid ${purchased ? '#34d399' : '#78350f'}; padding: 15px; border-radius: 8px; width: 250px; text-align: center; position: relative;">
+        <div style="font-size: 2.5rem; margin-bottom: 10px; filter: grayscale(${purchased ? '0%' : '80%'});">${upg.icon}</div>
+        <h4 style="color: ${purchased ? '#34d399' : '#fbbf24'}; margin-bottom: 5px; font-family: 'Cinzel', serif;">${upg.name}</h4>
+        <p style="font-size: 0.85rem; color: #d1d5db; margin-bottom: 15px;">${upg.desc}</p>
+        ${purchased 
+          ? `<span style="color: #34d399; font-weight: bold; font-size: 0.9rem;">✔️ Adquirido</span>` 
+          : `<button class="btn btn-secondary btn-small" onclick="buyGuildUpgrade('${upg.id}')">Construir (🪙 ${upg.costGold} | ⚡ ${upg.costStamina})</button>`}
+      </div>
+    `;
+  });
+}
+
+function buyGuildUpgrade(id) {
+  const h = getActiveHero();
+  if (!h.guildUpgrades) h.guildUpgrades = [];
+  
+  const upg = GUILD_UPGRADES_DB.find(u => u.id === id);
+  if (!upg) return;
+  
+  if (h.gold < upg.costGold || h.stamina < upg.costStamina) {
+    return triggerToast(`Recursos insuficientes. Necessário 🪙 ${upg.costGold} e ⚡ ${upg.costStamina}.`);
+  }
+  
+  h.gold -= upg.costGold;
+  h.stamina -= upg.costStamina;
+  h.guildUpgrades.push(upg.id);
+  
+  triggerToast(`Instalação da guilda concluída: ${upg.name}!`);
+  triggerScreenShake();
+  commitStorage();
+  renderAllEngines();
+}
+
+function exploreCompanion(id) {
+  const h = getActiveHero();
+  if (h.stamina < 20) {
+    return triggerToast("Sua energia está muito baixa para coordenar expedições (Requer ⚡ 20).");
+  }
+  
+  const c = h.companions.find(x => x.id === id);
+  if (!c) return;
+  
+  h.stamina -= 20;
+  
+  // Recompensas aleatórias
+  const rewards = ["gold", "iron", "leather", "xp"];
+  const rand = rewards[Math.floor(Math.random() * rewards.length)];
+  let amount = Math.floor(Math.random() * (10 + c.affinity * 2)) + 5;
+  let msg = "";
+  
+  if (rand === "gold") {
+    h.gold += amount;
+    msg = `${c.name} retornou das ruínas com 🪙 ${amount} de ouro!`;
+  } else if (rand === "iron") {
+    if (!h.materials) h.materials = { ferro: 0, couro: 0 };
+    h.materials["ferro"] = (h.materials["ferro"] || 0) + amount;
+    msg = `${c.name} vasculhou minas esquecidas e trouxe +${amount} Ferro.`;
+  } else if (rand === "leather") {
+    if (!h.materials) h.materials = { ferro: 0, couro: 0 };
+    h.materials["couro"] = (h.materials["couro"] || 0) + amount;
+    msg = `${c.name} caçou feras nas proximidades e trouxe +${amount} Couro.`;
+  } else {
+    h.xp += amount * 2;
+    msg = `${c.name} enfrentou criaturas menores e compartilhou experiência (XP +${amount * 2}).`;
+  }
+  
+  triggerToast(msg);
+  triggerScreenShake();
+  commitStorage();
+  renderAllEngines();
+}
+
 // 5. A MINA ABISSAL (NOVO GATHERING)
 function renderMinaTab() {
   const hero = getActiveHero();
   document.getElementById("mine-floor-indicator").innerText = hero.dungeonLevel;
+  
+  const staminaInd = document.getElementById("mine-stamina-indicator");
+  if (staminaInd) staminaInd.innerText = hero.stamina;
+  
   const mesh = document.getElementById("materials-grid-mesh");
   mesh.innerHTML = "";
 
@@ -3073,48 +3262,115 @@ function renderMinaTab() {
                     `;
     }
   });
-}
-function executeMining() {
-  const hero = getActiveHero();
-  if (hero.stamina < 15) {
-    return triggerToast(
-      "Braços fatigados... Descanso compulsório requerido. Visite a fogueira.",
-    );
+
+  const gridContainer = document.getElementById("mine-grid-container");
+  if (gridContainer && gridContainer.children.length === 0) {
+    generateMineGrid(hero.dungeonLevel);
   }
+}
+window.generateMineGrid = function(level) {
+  const container = document.getElementById("mine-grid-container");
+  if (!container) return;
+  
+  container.innerHTML = "";
+  document.getElementById("mining-result").innerHTML = "Uma nova veia de minérios foi exposta. Cave com cautela.";
+  
+  // Criar 30 blocos (6x5)
+  for (let i = 0; i < 30; i++) {
+    const cell = document.createElement("div");
+    cell.className = "mine-cell";
+    cell.innerHTML = "?";
+    
+    // Determinar conteúdo da célula baseado no nível
+    let contentType = "empty";
+    let contentData = null;
+    
+    const rand = Math.random();
+    if (rand < 0.25) {
+      contentType = "material";
+      contentData = rollMineMaterial(level);
+    } else if (rand < 0.30) {
+      contentType = "gold";
+      contentData = Math.floor(level * 5) + 10;
+    } else if (rand < 0.35) {
+      contentType = "hazard";
+      contentData = Math.floor(level * 10) + 5; // dano
+    }
+    
+    cell.dataset.type = contentType;
+    if (contentData !== null) {
+      cell.dataset.value = contentData;
+    }
+    
+    cell.onclick = function() { clickMineCell(this); };
+    container.appendChild(cell);
+  }
+}
 
-  hero.stamina -= 15;
-
+function rollMineMaterial(level) {
   const t1 = ["ferro", "cobre", "carvao", "couro"];
   const t2 = ["prata", "ouro_bruto", "quartzo", "escama"];
   const t3 = ["mithril", "esmeralda", "rubi", "pano_espectral"];
   const t4 = ["adamantium", "platina", "diamante", "chifre_demoniaco"];
 
   let pool = t1;
-  if (hero.dungeonLevel > 5) {
-    pool = pool.concat(t2);
-  }
-  if (hero.dungeonLevel > 10) {
-    pool = pool.concat(t3);
-  }
-  if (hero.dungeonLevel > 15) {
-    pool = pool.concat(t4);
-  }
+  if (level > 5) pool = pool.concat(t2);
+  if (level > 10) pool = pool.concat(t3);
+  if (level > 15) pool = pool.concat(t4);
 
-  const rolledMatId =
-    pool[Math.floor(Math.random() /* nosonar */ * pool.length)];
-  const amtBase = Math.floor(Math.random() /* nosonar */ * 3) + 1;
-  const finalAmt =
-    rolledMatId === "ferro" || rolledMatId === "couro" ? amtBase * 2 : amtBase; // Boost em material comum
+  return pool[Math.floor(Math.random() * pool.length)];
+}
 
-  hero.materials[rolledMatId] += finalAmt;
-  const matInfo = ALL_MATERIALS.find((m) => m.id === rolledMatId);
-
-  document.getElementById("mining-result").innerHTML = `
-                <span style="color:${matInfo.color}; text-shadow:0 0 8px ${matInfo.color}88; font-size:1.4rem;">
-                    ⛏️ CRASH! A picareta rompeu rochas antigas. Mãos sujas revelam: +${finalAmt}x ${matInfo.name} puro.
-                </span>
-            `;
-  triggerScreenShake();
+window.clickMineCell = function(cell) {
+  if (cell.classList.contains("revealed")) return;
+  
+  const hero = getActiveHero();
+  if (hero.stamina < 3) {
+    document.getElementById("mining-result").innerHTML = "<span style='color:#ef4444'>Estamina insuficiente (Requer 3 ⚡). Descanse no acampamento!</span>";
+    return triggerToast("Braços fatigados... Descanse na fogueira.");
+  }
+  
+  hero.stamina -= 3;
+  cell.classList.add("revealed");
+  cell.style.background = "#1a0a0a";
+  
+  const type = cell.dataset.type;
+  let resText = "";
+  
+  if (type === "empty") {
+    cell.innerHTML = "⛏️";
+    cell.style.color = "#555";
+    resText = "<span style='color:#78350f'>Apenas rocha sólida e poeira...</span>";
+  } else if (type === "material") {
+    const matId = cell.dataset.value;
+    const matInfo = ALL_MATERIALS.find((m) => m.id === matId);
+    
+    const amtBase = Math.floor(Math.random() * 2) + 1;
+    const finalAmt = (matId === "ferro" || matId === "couro") ? amtBase * 2 : amtBase;
+    
+    hero.materials[matId] = (hero.materials[matId] || 0) + finalAmt;
+    
+    cell.innerHTML = matInfo.icon || "💎";
+    resText = `<span style="color:${matInfo.color}; text-shadow:0 0 5px ${matInfo.color}88;">Você encontrou +${finalAmt}x ${matInfo.name}!</span>`;
+  } else if (type === "gold") {
+    const gold = parseInt(cell.dataset.value);
+    hero.gold += gold;
+    cell.innerHTML = "🪙";
+    resText = `<span style="color:#fbbf24">Um veio de ouro puro! +${gold} 🪙</span>`;
+  } else if (type === "hazard") {
+    const dmg = parseInt(cell.dataset.value);
+    hero.currentHp -= dmg;
+    cell.innerHTML = "💀";
+    cell.style.color = "#ef4444";
+    resText = `<span style="color:#ef4444">Armadilha Abissal! Sofreu ${dmg} de dano!</span>`;
+    triggerScreenShake();
+    if (hero.currentHp <= 0) {
+      hero.currentHp = 1; // Previne morte instantânea na mina
+      resText += " Você sobreviveu por pouco!";
+    }
+  }
+  
+  document.getElementById("mining-result").innerHTML = resText;
   commitStorage();
   renderAllEngines();
 }
@@ -7460,7 +7716,7 @@ if (typeof window !== "undefined")
 if (typeof window !== "undefined") window.interactCompanion = interactCompanion;
 if (typeof window !== "undefined") window.toggleCompanion = toggleCompanion;
 if (typeof window !== "undefined") window.renderMinaTab = renderMinaTab;
-if (typeof window !== "undefined") window.executeMining = executeMining;
+
 if (typeof window !== "undefined")
   window.performConditioning = performConditioning;
 if (typeof window !== "undefined") window.restCharacterFull = restCharacterFull;
@@ -7684,73 +7940,4 @@ window.openNecromancyBook = function() {
     renderNecromancyBook();
   }
 };
-
-window.renderNecromancyBook = function() {
-  const hero = getActiveHero();
-  if (!hero || hero.class !== "Necromante") return;
-  if (!hero.necromancyBook) hero.necromancyBook = { guerreiro: 0, mago: 0, guardiao: 0 };
-  
-  const content = document.getElementById("necromancy-book-content");
-  if (!content) return;
-
-  const book = hero.necromancyBook;   
-    options.forEach((opt, idx) => {
-       const isSelected = book[type] === idx;
-       const btnColor = isSelected ? "#c084fc" : "#444";
-       const textColor = isSelected ? "#fff" : "#aaa";
-       html += `
-         <div style="display: flex; gap: 15px; justify-content: space-between; align-items: center; border: 1px solid ${btnColor}; padding: 12px; border-radius: 4px; background: ${isSelected ? 'rgba(192, 132, 252, 0.1)' : 'transparent'};">
-           <div style="color: ${textColor}; flex: 1; padding-right: 10px;">
-              <strong style="display: block; margin-bottom: 4px;">${opt.name}</strong>
-              <span style="font-size: 0.85rem; line-height: 1.4; display: block;">${opt.desc}</span>
-           </div>
-           <button class="btn" style="min-width: 120px; border-color: ${btnColor}; color: ${isSelected ? '#c084fc' : '#aaa'};" onclick="setNecromancySpecialization('${type}', ${idx})">
-             ${isSelected ? "Ativo" : "Selecionar"}
-           </button>
-         </div>
-       `;
-    });
-    
-    html += `</div></div>`;
-    return html;
-  };
-
-  const guerreiroOpts = [
-    { name: "Legião Esqueleto (Padrão)", desc: "50 HP | Dano Físico Moderado" },
-    { name: "Ofensiva (Especialização)", desc: "30 HP | Dano aumentado em 50%" },
-    { name: "Sacrifício Solitário", desc: "Não invoca Guerreiros. +15 de Dano Bruto permanentemente." }
-  ];
-
-  const magoOpts = [
-    { name: "Mestres do Arcano (Padrão)", desc: "25 HP | Dano Mágico Alto" },
-    { name: "Sifão Vital (Especialização)", desc: "Dano reduzido, mas parte do dano cura o Necromante." },
-    { name: "Sacrifício Solitário", desc: "Não invoca Magos. +30 de Mana Máxima permanentemente." }
-  ];
-
-  const guardiaoOpts = [
-    { name: "Muralha de Ossos (Padrão)", desc: "100 HP | Dano Baixo" },
-    { name: "Colosso (Especialização)", desc: "150 HP | Dano Baixo" },
-    { name: "Sacrifício Solitário", desc: "Não invoca Guardiões. +20 de Defesa permanentemente." }
-  ];
-
-  content.innerHTML = [
-    buildSection("guerreiro", "Guerreiros Esqueletos", "⚔️", guerreiroOpts) +
-    buildSection("mago", "Magos Esqueletos", "🔮", magoOpts) +
-    buildSection("guardiao", "Guardiões de Ossos", "🛡️", guardiaoOpts)
-  ];
-
-window.setNecromancySpecialization = function(type, idx) {
-  const hero = getActiveHero();
-  if (!hero || hero.class !== "Necromante") return;
-  if (!hero.necromancyBook) hero.necromancyBook = { guerreiro: 0, mago: 0, guardiao: 0 };
-  
-  hero.necromancyBook[type] = idx;
-  commitStorage();
-  
-  window.renderNecromancyBook();
-  
-  const calc = computeLiveStats();
-  renderFichaTab(calc);
-  
-  triggerToast("Grimório atualizado!");
-};
+

@@ -1282,13 +1282,12 @@ function executeMonsterAI(enemy, hero, calc) {
   let baseDmg = enemy.atk;
   baseDmg = Math.floor(baseDmg * (0.9 + Math.random() * 0.2)); // Variação de dano 90% a 110%
 
-  // Roteador Hierárquico
-  if (enemy.isBoss) {
-    return calculateBossAction(enemy, hero, calc, hpPercent, heroHpPercent, baseDmg);
-  } else if (enemy.isElite) {
-    return calculateEliteAction(enemy, hero, calc, hpPercent, heroHpPercent, baseDmg);
+  // Inteligência Artificial Universal (Utility AI)
+  if (typeof window.executeUtilityAI === "function") {
+      return window.executeUtilityAI(enemy, hero, calc, baseDmg);
   } else {
-    return calculateCommonAction(enemy, hero, calc, hpPercent, heroHpPercent, baseDmg);
+      // Fallback de segurança caso o motor de IA falhe em carregar
+      return calculateCommonAction(enemy, hero, calc, hpPercent, heroHpPercent, baseDmg);
   }
 }
 
@@ -1464,8 +1463,48 @@ function getComboMultiplier() {
 }
 
 window.handleHeroDeath = function () {
-  GameAudio.play("death");
-  _origDeath();
+  const hero = getActiveHero();
+  if (hero) {
+    hero.currentHp = computeLiveStats().maxHp;
+    
+    // Penalidade
+    const goldLost = Math.floor(hero.gold * 0.1);
+    hero.gold = Math.max(0, hero.gold - goldLost);
+
+    const deathOverlay = document.getElementById("death-overlay");
+    if (deathOverlay) {
+      const randomMsg = DEATH_MESSAGES[Math.floor(Math.random() * DEATH_MESSAGES.length)];
+      const msgEl = document.getElementById("death-message-text");
+      if (msgEl) msgEl.innerText = randomMsg;
+      
+      const statsEl = document.getElementById("death-run-stats");
+      if (statsEl) {
+        statsEl.innerHTML = `
+          <div>⚔️ Inimigo Fatal: ${activeCombatInstance ? activeCombatInstance.name : "Desconhecido"}</div>
+          <div>🔥 Andar: ${hero.dungeonLevel || 1}</div>
+        `;
+      }
+      
+      const penEl = document.getElementById("death-penalties-info");
+      if (penEl) {
+        penEl.innerHTML = `<div>💸 Ouro perdido: <span style="color:#f87171">-${goldLost}</span></div>`;
+      }
+      
+      deathOverlay.classList.add("active");
+    }
+    
+    commitStorage();
+  }
+  
+  if (typeof combatTickerInterval !== 'undefined' && combatTickerInterval) {
+    clearInterval(combatTickerInterval);
+  }
+  activeCombatInstance = null;
+  clearDamageVignette();
+  
+  if (typeof renderAllEngines === 'function') {
+    renderAllEngines();
+  }
 };
 
 function finalizeCombatWin() {
@@ -2982,7 +3021,11 @@ const DEATH_MESSAGES = [
 
 window.closeDeath = function () {
   document.getElementById("death-overlay").classList.remove("active");
-  navigate("tab-dungeon");
+  if (typeof switchTab === "function") {
+    switchTab("tab-town");
+  } else if (typeof navigate === "function") {
+    navigate("tab-town");
+  }
 };
 
 

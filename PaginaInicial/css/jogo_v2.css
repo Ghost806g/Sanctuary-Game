@@ -3164,6 +3164,9 @@ select:focus {
     inset 0 0 10px rgba(0, 0, 0, 0.5),
     0 2px 4px rgba(0, 0, 0, 0.5);
   user-select: none;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
 }
 
 .mine-cell:hover:not(.revealed) {

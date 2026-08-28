@@ -323,5 +323,31 @@ const HeroTraits = {
     if (this.Classes[hero.class]?.takeDamageMod) finalDmg = this.Classes[hero.class].takeDamageMod(finalDmg, type);
     if (this.Professions[hero.profession]?.takeDamageMod) finalDmg = this.Professions[hero.profession].takeDamageMod(finalDmg, type);
     return finalDmg;
+  },
+
+  getApplyStatusMod: function(hero, effectObj) {
+    let finalEffect = { ...effectObj };
+    if (this.Races[hero.race]?.applyStatusMod) finalEffect = this.Races[hero.race].applyStatusMod(finalEffect, hero);
+    if (this.Classes[hero.class]?.applyStatusMod) finalEffect = this.Classes[hero.class].applyStatusMod(finalEffect, hero);
+    if (this.Professions[hero.profession]?.applyStatusMod) finalEffect = this.Professions[hero.profession].applyStatusMod(finalEffect, hero);
+    return finalEffect;
+  },
+
+  postActionHook: function(hero, enemy, actionResult) {
+    let effects = [];
+    
+    if (this.Races[hero.race]?.postActionHook) {
+       const res = this.Races[hero.race].postActionHook(hero, enemy, actionResult);
+       if (res) effects = effects.concat(res);
+    }
+    if (this.Classes[hero.class]?.postActionHook) {
+       const res = this.Classes[hero.class].postActionHook(hero, enemy, actionResult);
+       if (res) effects = effects.concat(res);
+    }
+    if (this.Professions[hero.profession]?.postActionHook) {
+       const res = this.Professions[hero.profession].postActionHook(hero, enemy, actionResult);
+       if (res) effects = effects.concat(res);
+    }
+    return effects;
   }
 };
