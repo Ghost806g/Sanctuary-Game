@@ -7940,4 +7940,4 @@ window.openNecromancyBook = function() {
     renderNecromancyBook();
   }
 };
-
+

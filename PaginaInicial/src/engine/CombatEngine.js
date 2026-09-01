@@ -1088,6 +1088,7 @@ function resolveEnemyAttack(success) {
         activeCombatInstance.aiDefendTurn = true;
         activeCombatInstance.atb = 0;
         resumeCombatTicker();
+        if (typeof renderAllEngines === "function") renderAllEngines();
         return;
      }
      
@@ -1098,6 +1099,7 @@ function resolveEnemyAttack(success) {
         generateFloatingText(healAmt, "heal", "enemy");
         activeCombatInstance.atb = 0;
         resumeCombatTicker();
+        if (typeof renderAllEngines === "function") renderAllEngines();
         return;
      }
 
