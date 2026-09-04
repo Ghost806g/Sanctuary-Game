@@ -46,6 +46,30 @@ body {
 body {
   padding-top: 55px;
   padding-bottom: 20px;
+  cursor: url('../assets/images/ui/cursors/selecao_32.png') 0 0, auto !important;
+}
+
+/* ==========================================================================
+           SCROLLBAR CUSTOMIZADA
+           ========================================================================== */
+::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background: var(--bg-pure);
+  border-left: 1px solid var(--border-dark);
+}
+::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--red-blood);
 }
 
 /* ==========================================================================
@@ -419,8 +443,6 @@ body {
   flex-direction: column;
   list-style: none;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--red-blood) transparent;
   background: transparent;
   gap: 6px;
 }
@@ -2513,17 +2535,17 @@ select:focus {
 @keyframes deathTextReveal {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.3);
+    transform: scale(0.3);
     filter: blur(15px);
   }
   50% {
     opacity: 1;
     filter: blur(0);
-    transform: translate(-50%, -50%) scale(1.1);
+    transform: scale(1.1);
   }
   100% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
   }
 }
 @keyframes deathPulse {
@@ -2558,12 +2580,13 @@ select:focus {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  animation:
-    deathFadeIn 0.8s ease forwards,
-    deathPulse 3s ease-in-out 1s infinite;
+  opacity: 0;
 }
 #death-overlay.active {
   display: flex;
+  animation:
+    deathFadeIn 0.8s ease forwards,
+    deathPulse 3s ease-in-out 1s infinite;
 }
 .death-skull {
   font-size: 5rem;
@@ -3964,7 +3987,7 @@ select:focus {
   width: 0%;
   background: linear-gradient(180deg, #f87171, #dc2626, #991b1b);
   box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), 0 0 15px #ef4444;
-  animation: fillQteBar 1.5s linear forwards;
+  animation: fillQteBar 1.2s linear forwards;
 }
 
 .qte-bar-sweet-spot {
@@ -3989,9 +4012,10 @@ select:focus {
 
 @keyframes fillQteBar {
   0% { width: 0%; background: linear-gradient(180deg, #f87171, #dc2626, #991b1b); box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), 0 0 15px #ef4444;}
-  70% { background: linear-gradient(180deg, #f87171, #dc2626, #991b1b); box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), 0 0 15px #ef4444;}
-  75% { width: 75%; background: linear-gradient(180deg, #86efac, #22c55e, #166534); box-shadow: inset 0 2px 4px rgba(255,255,255,0.5), 0 0 30px #4ade80;} /* Sweet spot starts at 75% */
-  90% { background: linear-gradient(180deg, #86efac, #22c55e, #166534); box-shadow: inset 0 2px 4px rgba(255,255,255,0.5), 0 0 30px #4ade80;}
+  44% { background: linear-gradient(180deg, #f87171, #dc2626, #991b1b); box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), 0 0 15px #ef4444;}
+  45% { width: 45%; background: linear-gradient(180deg, #86efac, #22c55e, #166534); box-shadow: inset 0 2px 4px rgba(255,255,255,0.5), 0 0 30px #4ade80;}
+  80% { width: 80%; background: linear-gradient(180deg, #86efac, #22c55e, #166534); box-shadow: inset 0 2px 4px rgba(255,255,255,0.5), 0 0 30px #4ade80;}
+  81% { background: linear-gradient(180deg, #f87171, #dc2626, #991b1b); box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), 0 0 15px #ef4444;}
   100% { width: 100%; background: linear-gradient(180deg, #f87171, #dc2626, #991b1b); box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), 0 0 15px #ef4444;}
 }
 

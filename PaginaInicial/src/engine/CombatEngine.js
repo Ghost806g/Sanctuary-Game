@@ -409,71 +409,59 @@ window.castCombatSkill = function (skillId) {
     
     hero.furia = 0; hero.adrenalina = 0; hero.fe = 0; hero.foco = 0; hero.almas = 0;
   } else {
-    // Custos comuns
-    if (["Bárbaro", "Barbaro"].includes(hero.class)) {
-      if (hero.currentHp <= sk.cost) {
-        return triggerToast("Vida insuficiente para o sacrifício de sangue!");
-      }
-      hero.currentHp -= sk.cost;
-      hero.adrenalina = Math.min(100, (hero.adrenalina || 0) + 15);
-    } else if (hero.class === "Guerreiro") {
-      if ((hero.furia || 0) < sk.cost) {
-        return triggerToast(`Você precisa de ${sk.cost} de Fúria!`);
-      }
-      hero.furia -= sk.cost;
-    } else if (hero.class === "Ranger") {
-      let f = hero.foco === undefined ? 100 : hero.foco;
-      if (f < sk.cost) {
-        return triggerToast(`Foco insuficiente! Faltam ${sk.cost - f} pontos.`);
-      }
-      
-      // --- MIRA IMPLACÁVEL (RANGER) ---
-      if (heroCombatState.position === "retaguarda" && f === 100) {
-         heroCombatState.rangerHeadshot = true;
-         appendTerminalLog("🎯 MIRA IMPLACÁVEL! Seu foco de atirador é absoluto, o disparo será devastador!", "reward");
-      }
-      
-      hero.foco = f - sk.cost;
-    } else {
-      // Classes mágicas e divinas (Necromante, Arcanista, Paladino - Custo base de Mana)
-      if (hero.class === "Necromante" && sk.id === "n5" && (hero.almas || 0) < 20) {
-        return triggerToast("Você precisa de 20 Almas para forjar a Armadura de Ossos!");
-      }
-      
-      let finalCost = sk.cost;
-      const biome = typeof getCurrentBiome === "function" ? getCurrentBiome() : null;
-      if (biome && biome.name) {
-         const bName = biome.name.toLowerCase();
-         if ((bName.includes("tundra") || bName.includes("gelo") || bName.includes("congelada")) && sk.type === "Fogo") {
-            finalCost *= 2;
-            triggerToast("🔥❄️ O frio extremo dobra o custo da sua magia de fogo!");
+    // ===============================================================
+    // CLÁUSULA DE SEGURANÇA: TODAS as classes usam MANA para skills.
+    // A barra secundária (Fúria, Adrenalina, Foco, Almas, Fé) é
+    // reservada EXCLUSIVAMENTE para Ultimates e Passivas especiais.
+    // ===============================================================
+
+    // --- Caso especial: Necromante Armadura de Ossos exige Almas ALÉM de Mana ---
+    if (hero.class === "Necromante" && sk.id === "n5" && (hero.almas || 0) < 20) {
+      return triggerToast("Você precisa de 20 Almas para forjar a Armadura de Ossos!");
+    }
+
+    // --- Custo de Mana (universal para todas as classes) ---
+    let finalCost = sk.cost;
+    const biome = typeof getCurrentBiome === "function" ? getCurrentBiome() : null;
+    if (biome && biome.name) {
+       const bName = biome.name.toLowerCase();
+       if ((bName.includes("tundra") || bName.includes("gelo") || bName.includes("congelada")) && sk.type === "Fogo") {
+          finalCost *= 2;
+          triggerToast("🔥❄️ O frio extremo dobra o custo da sua magia de fogo!");
+       }
+    }
+
+    if (hero.currentMana < finalCost) {
+      if (hero.class === "Arcanista") {
+         // --- MAGIA DE SANGUE (ARCANISTA) - Exceção especial de classe ---
+         const missingMana = finalCost - hero.currentMana;
+         const bloodCost = missingMana * 2;
+         if (hero.currentHp <= bloodCost) {
+            return triggerToast("Sua vida é muito baixa para conjurar Magia de Sangue!");
          }
-      }
-      
-      if (hero.currentMana < finalCost) {
-        if (hero.class === "Arcanista") {
-           // --- MAGIA DE SANGUE (ARCANISTA) ---
-           const missingMana = finalCost - hero.currentMana;
-           const bloodCost = missingMana * 2;
-           if (hero.currentHp <= bloodCost) {
-              return triggerToast("Sua vida é muito baixa para conjurar Magia de Sangue!");
-           }
-           hero.currentHp -= bloodCost;
-           hero.currentMana = 0;
-           appendTerminalLog(`🩸 MAGIA DE SANGUE! Faltavam ${missingMana} de Mana. Você canalizou sua força vital e sacrificou ${bloodCost} HP para conjurar!`, "danger");
-           triggerScreenShake();
-        } else {
-           if (hero.class === "Paladino") return triggerToast("Sua Mana Sagrada se esgotou! Impossível conjurar.");
-           return triggerToast("Mana Arcana insuficiente para conjurar a habilidade.");
-        }
+         hero.currentHp -= bloodCost;
+         hero.currentMana = 0;
+         appendTerminalLog(`🩸 MAGIA DE SANGUE! Faltavam ${missingMana} de Mana. Você canalizou sua força vital e sacrificou ${bloodCost} HP para conjurar!`, "danger");
+         triggerScreenShake();
       } else {
-        hero.currentMana -= finalCost;
+         return triggerToast("Mana insuficiente para conjurar a habilidade.");
       }
-      
-      // Dedução secundária após confirmar a mana
-      if (hero.class === "Necromante" && sk.id === "n5") {
-         hero.almas -= 20;
-      }
+    } else {
+      hero.currentMana -= finalCost;
+    }
+
+    // --- Dedução secundária APÓS confirmar a mana (casos especiais) ---
+    if (hero.class === "Necromante" && sk.id === "n5") {
+       hero.almas -= 20;
+    }
+
+    // --- MIRA IMPLACÁVEL (RANGER) - Passiva de posição, sem custo de Foco ---
+    if (hero.class === "Ranger" && heroCombatState.position === "retaguarda") {
+       let f = hero.foco !== undefined ? hero.foco : 100;
+       if (f === 100) {
+          heroCombatState.rangerHeadshot = true;
+          appendTerminalLog("🎯 MIRA IMPLACÁVEL! Seu foco de atirador é absoluto, o disparo será devastador!", "reward");
+       }
     }
   }
 
@@ -578,7 +566,7 @@ function internalHeroActionExecution(skillObj) {
         if (comboCounter > (runStats.maxCombo || 0)) {
           runStats.maxCombo = comboCounter;
         }
-        const comboMult = getComboMultiplier();
+        const comboMult = Math.min(1.5, getComboMultiplier()); // Cap: máx 1.5x
         if (comboMult > 1) {
           finalDmg = Math.floor(finalDmg * comboMult);
         }
@@ -603,16 +591,16 @@ function internalHeroActionExecution(skillObj) {
 
 
         // ================= NOVO: GANHO DE RECURSOS (HERÓI ATACANDO) =================
-        if (hero.class === "Guerreiro") {
-          hero.furia = Math.min(100, (hero.furia || 0) + 15);
-        } else if (hero.class === "Ranger") {
-          if (!skillObj || skillObj.cost === 0) {
+        if (!skillObj || skillObj.cost === 0) {
+          if (hero.class === "Guerreiro") {
+            hero.furia = Math.min(100, (hero.furia || 0) + 15);
+          } else if (hero.class === "Ranger") {
             hero.foco = Math.min(100, (hero.foco !== undefined ? hero.foco : 100) + 10);
+          } else if (["Necromante", "Arcanista"].includes(hero.class)) {
+            hero.almas = Math.min(100, (hero.almas || 0) + 5);
+          } else if (hero.class === "Paladino") {
+            hero.fe = Math.min(100, (hero.fe || 0) + 10);
           }
-        } else if (["Necromante", "Arcanista"].includes(hero.class)) {
-          hero.almas = Math.min(100, (hero.almas || 0) + 5);
-        } else if (hero.class === "Paladino") {
-          hero.fe = Math.min(100, (hero.fe || 0) + 10);
         }
         // =========================================================================
 
@@ -669,8 +657,13 @@ function internalHeroActionExecution(skillObj) {
 
       checkBossPhaseTransition(enemy);
 
-      if (skillObj && skillObj.effect && finalDmg > 0) {
+      if (skillObj && skillObj.effect) {
+        // Aplica efeitos de status no inimigo mesmo que o dano seja 0
+        // (ex: Grito Provocador é suporte com ratio:0 mas aplica Blind)
         applyStatusToEnemy(skillObj.effect, finalDmg);
+        if (finalDmg === 0 && ["blind", "stun", "freeze", "armor_break"].includes(skillObj.effect.type)) {
+          appendTerminalLog(`📢 O Herói usou ${skillObj.name}!`, "combat");
+        }
       }
 
       let lStealValue = 0;
@@ -1220,13 +1213,15 @@ function resolveEnemyAttack(success) {
 
        hero.currentHp -= actualDamageToHero;
        
-       // --- ÚLTIMO SUSPIRO (BÁRBARO) ---
-       if (hero.currentHp <= 0 && ["Bárbaro", "Barbaro"].includes(hero.class) && !heroCombatState.barbarianLastStandUsed) {
+       // --- ÚLTIMO SUSPIRO (BÁRBARO) - Passiva de Sobrevivência ---
+       // Requer Adrenalina CHEIA (100) para ativar. Consome toda a Adrenalina.
+       if (hero.currentHp <= 0 && ["Bárbaro", "Barbaro"].includes(hero.class) && !heroCombatState.barbarianLastStandUsed && (hero.adrenalina || 0) >= 100) {
           hero.currentHp = 1;
+          hero.adrenalina = 0; // Consome toda a Adrenalina
           heroCombatState.barbarianLastStandUsed = true;
           heroCombatState.atkBuff = (heroCombatState.atkBuff || 0) + 100;
           heroCombatState.immuneToDamage = true;
-          appendTerminalLog(`🩸 ÚLTIMO SUSPIRO! Você se recusa a morrer! (HP cravado em 1, Imunidade a Dano e +100% de Ataque pelo próximo turno)`, "reward");
+          appendTerminalLog(`🩸 ÚLTIMO SUSPIRO! Sua Adrenalina explodiu! Você se recusa a morrer! (HP cravado em 1, Imunidade a Dano e +100% de Ataque pelo próximo turno)`, "reward");
           triggerScreenShake();
        }
        
@@ -2223,6 +2218,7 @@ const BESTIARY_IMAGES = {
   "Elemental de Gelo": "Gemini_Generated_Image_hede2thede2thede",
   "Lobo das Estrelas": "morcego_vampiro",
   "Cavaleiro Caído": "o_omen_caido",
+  "Besta Sanguinária": "besta_sanguinaria",
   "Sombra Distorcida": "amalgama_ossos",
   "Rei Esqueleto Ancestral": "rei_esqueleto_ancestral_senhor_dos_ossos",
   "Rei de Cristal Estilhaçado": "rei_de_cristal_estilhacado",
@@ -2422,9 +2418,16 @@ function moveDungeonFloor(dir) {
     );
   }
   if (hero.stamina < 5) {
-    return triggerToast("O cansaço quebra as suas pernas. Durma na fogueira.");
+    // NOVA MECÂNICA: IMPULSO HEROICO (Permite descer para salvar progresso)
+    if (hero.floorCleared) {
+      appendTerminalLog("Você força seus limites ao extremo para descer as escadarias, esgotando suas últimas forças.", "warning");
+      hero.stamina = 0;
+    } else {
+      return triggerToast("O cansaço quebra as suas pernas. Durma na fogueira.");
+    }
+  } else {
+    hero.stamina -= 5;
   }
-  hero.stamina -= 5;
 
   hero.dungeonLevel++;
   if (!hero.maxDungeonLevel) {
@@ -3022,11 +3025,22 @@ const DEATH_MESSAGES = [
 
 
 window.closeDeath = function () {
-  document.getElementById("death-overlay").classList.remove("active");
+  const overlay = document.getElementById("death-overlay");
+  if (overlay) {
+    overlay.classList.remove("active");
+    // Forçar reset de animação para que na próxima morte as animações reiniciem
+    overlay.style.animation = "none";
+    overlay.style.opacity = "0";
+    void overlay.offsetWidth; // trigger reflow
+    overlay.style.animation = "";
+    overlay.style.opacity = "";
+  }
+  // Garantir que a vinheta de dano esteja limpa
+  clearDamageVignette();
   if (typeof switchTab === "function") {
-    switchTab("tab-town");
+    switchTab("tab-acampamento");
   } else if (typeof navigate === "function") {
-    navigate("tab-town");
+    navigate("tab-acampamento");
   }
 };
 

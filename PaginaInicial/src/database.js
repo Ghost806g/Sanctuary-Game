@@ -120,6 +120,37 @@ const ALL_MATERIALS = [
     color: "#fef08a",
     icon: "assets/images/items/minerals/PNG/Transperent/Icon20.webp",
   },
+  // ====================== INGREDIENTES ALQUÍMICOS ======================
+  {
+    id: "erva_sangue",
+    name: "Erva de Sangue",
+    color: "#ef4444",
+    icon: "assets/images/items/minerals/PNG/Transperent/Icon11.webp",
+  },
+  {
+    id: "gosma_toxica",
+    name: "Gosma Tóxica",
+    color: "#22c55e",
+    icon: "assets/images/items/minerals/PNG/Transperent/Icon8.webp",
+  },
+  {
+    id: "flor_lotus",
+    name: "Flor de Lótus",
+    color: "#38bdf8",
+    icon: "assets/images/items/minerals/PNG/Transperent/Icon7.webp",
+  },
+  {
+    id: "raiz_forte",
+    name: "Raiz Forte",
+    color: "#b45309",
+    icon: "assets/images/items/minerals/PNG/Transperent/Icon4.webp",
+  },
+  {
+    id: "cogumelo_umbrifugo",
+    name: "Cogumelo Umbrífugo",
+    color: "#a855f7",
+    icon: "assets/images/items/minerals/PNG/Transperent/Icon12.webp",
+  }
 ];
 
 // ====================== BOSS SETS (CONJUNTOS ELITE) ======================

@@ -536,8 +536,14 @@ function _calcEquipStats(hero, passives) {
     if (item.set) {
       setCounts[item.set] = (setCounts[item.set] || 0) + 1;
     }
-    let itemAtk = item.damage || item.power || 0;
-    let itemDef = item.defense || item.power || 0;
+    // Fix: Acessórios com 'power' davam ataque bruto absurdo.
+    // Agora, power dá apenas 30% como atk e 30% como def.
+    let itemAtk = item.damage || 0;
+    let itemDef = item.defense || 0;
+    if (item.power && !item.damage && !item.defense) {
+      itemAtk = Math.floor(item.power * 0.3);
+      itemDef = Math.floor(item.power * 0.3);
+    }
 
     if (typeof HeroTraits !== "undefined") {
       const mods = HeroTraits.getEquipStatsMod(hero, item, itemAtk, itemDef);
@@ -772,7 +778,7 @@ function computeLiveStats() {
 
   let rawAttackScaling = 0;
   const cls = hero.class;
-  const levelMult = Math.sqrt(hero.level || 1); // Escala não-linear pelo nível
+  const levelMult = 1 + Math.log2(hero.level || 1) * 0.3; // Escala logarítmica suave
   
   if (["Guerreiro"].includes(cls)) {
     rawAttackScaling = (hero.attributes.forca * 1.2) * levelMult;
@@ -1359,6 +1365,7 @@ const NAV_CATEGORIES = {
   refugio: [
     { id: "tab-acampamento", label: "Acampamento" },
     { id: "tab-forge", label: "Forja & Loja [F]" },
+    { id: "tab-alquimia", label: "Alquimia Maldita [A]" },
     { id: "tab-panteao", label: "O Panteão" },
   ],
   registros: [
@@ -3136,13 +3143,18 @@ function interactCompanion(id) {
 }
 function toggleCompanion(id) {
   const h = getActiveHero();
-  h.companions.forEach((c) => {
-    if (c.id === id) {
-      c.equipped = !c.equipped;
-    } else {
+  const c = h.companions.find(x => x.id === id);
+  if (c) {
+    if (c.equipped) {
       c.equipped = false;
+    } else {
+      const equippedCount = h.companions.filter(x => x.equipped).length;
+      if (equippedCount >= 2) {
+        return triggerToast("Sua Linha de Frente já está cheia! (Máx: 2)");
+      }
+      c.equipped = true;
     }
-  });
+  }
   commitStorage();
   renderAllEngines();
   triggerToast("Formação de guerra estratégica ajustada com perfeição.");
@@ -3201,12 +3213,18 @@ function buyGuildUpgrade(id) {
 
 function exploreCompanion(id) {
   const h = getActiveHero();
+  const c = h.companions.find(x => x.id === id);
+  if (!c) return;
+
+  // 1. Verifica se o companheiro está em cooldown (5 minutos)
+  if (c.cooldown && Date.now() < c.cooldown) {
+    const minutosRestantes = Math.ceil((c.cooldown - Date.now()) / 60000);
+    return triggerToast(`⏳ ${c.name} ainda está exausto da última expedição. Aguarde ${minutosRestantes} minuto(s).`);
+  }
+
   if (h.stamina < 20) {
     return triggerToast("Sua energia está muito baixa para coordenar expedições (Requer ⚡ 20).");
   }
-  
-  const c = h.companions.find(x => x.id === id);
-  if (!c) return;
   
   h.stamina -= 20;
   
@@ -3232,7 +3250,11 @@ function exploreCompanion(id) {
     msg = `${c.name} enfrentou criaturas menores e compartilhou experiência (XP +${amount * 2}).`;
   }
   
-  triggerToast(msg);
+  // 2. Aplica o cooldown
+  c.cooldown = Date.now() + 300000; // 5 minutos (300.000 ms)
+
+  // 3. Notificação única com o aviso
+  triggerToast(msg + " (Retorna em 5 minutos)");
   triggerScreenShake();
   commitStorage();
   renderAllEngines();
@@ -4206,7 +4228,15 @@ function repairAllItems() {
   const hero = getActiveHero();
   let totalCost = 0;
 
-  hero.inventory.forEach((item) => {
+  // Lista com todos os itens (inventário + equipamentos equipados)
+  const allItems = [...hero.inventory];
+  if (hero.equipment) {
+    Object.values(hero.equipment).forEach(equippedItem => {
+      if (equippedItem) allItems.push(equippedItem);
+    });
+  }
+
+  allItems.forEach((item) => {
     if (
       item.durability !== undefined &&
       item.durability < (item.maxDurability || 100)
@@ -4224,12 +4254,12 @@ function repairAllItems() {
     return triggerToast(`Ouro insuficiente. Você precisa de ${totalCost} 🪙`);
   }
 
-  if (!confirm(`Reparar TODOS os itens danificados por ${totalCost} 🪙?`)) {
+  if (!confirm(`Reparar TODOS os itens danificados (incluindo equipados) por ${totalCost} 🪙?`)) {
     return;
   }
 
   hero.gold -= totalCost;
-  hero.inventory.forEach((item) => {
+  allItems.forEach((item) => {
     if (item.durability !== undefined) {
       item.durability = item.maxDurability || 100;
     }
@@ -4676,9 +4706,15 @@ function moveDungeonFloor(dir) {
     );
   }
   if (hero.stamina < 5) {
-    return triggerToast("O cansaço quebra as suas pernas. Durma na fogueira.");
+    if (hero.floorCleared) {
+      appendTerminalLog("Você força seus limites ao extremo para descer as escadarias, esgotando suas últimas forças.", "warning");
+      hero.stamina = 0;
+    } else {
+      return triggerToast("O cansaço quebra as suas pernas. Durma na fogueira.");
+    }
+  } else {
+    hero.stamina -= 5;
   }
-  hero.stamina -= 5;
 
   hero.dungeonLevel++;
   if (!hero.maxDungeonLevel) {
@@ -5375,15 +5411,32 @@ function startEnemyTurnTelegraph() {
 
   appendTerminalLog(`⚠️ ${activeCombatInstance.name} está preparando um ataque! Prepare-se para ESQUIVAR!`, "combat");
 
-  const overlay = document.getElementById("qte-overlay");
-  if (overlay) {
-    overlay.classList.remove("hidden");
-    const circle = document.getElementById("qte-circle");
-    if (circle) {
-      circle.style.animation = 'none';
-      void circle.offsetWidth;
-      circle.style.animation = null;
-    }
+  // --- Criar o QTE overlay dinamicamente se não existir ---
+  let overlay = document.getElementById("qte-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "qte-overlay";
+    overlay.className = "qte-overlay hidden";
+    overlay.innerHTML = `
+      <div class="qte-bar-container">
+        <div class="qte-bar-sweet-spot"></div>
+        <div class="qte-bar-fill" id="qte-circle"></div>
+        <div class="qte-bar-text">⚔️ ESPAÇO</div>
+      </div>
+    `;
+    // Inserir dentro do combat-view ou do body
+    const combatView = document.getElementById("combat-view") || document.body;
+    combatView.style.position = combatView.style.position || "relative";
+    combatView.appendChild(overlay);
+  }
+
+  // Mostrar o overlay e resetar a animação da barra
+  overlay.classList.remove("hidden");
+  const barFill = overlay.querySelector(".qte-bar-fill") || document.getElementById("qte-circle");
+  if (barFill) {
+    barFill.style.animation = 'none';
+    void barFill.offsetWidth;
+    barFill.style.animation = 'fillQteBar 1.2s linear forwards';
   }
 
   qteSuccess = false;
@@ -5409,8 +5462,9 @@ function startEnemyTurnTelegraph() {
     if (e.code === "Space" && overlay && !overlay.classList.contains("hidden")) {
       e.preventDefault();
       const elapsed = Date.now() - qteStartTime;
-      // Sweet spot na animação (HARDCORE): 65% a 80% de 1000ms (650ms a 800ms)
-      if (elapsed >= 650 && elapsed <= 800) {
+      // Sweet spot sincronizado com animação CSS (1200ms total)
+      // Janela de sucesso: 550ms a 950ms (400ms de janela, desafiador mas justo)
+      if (elapsed >= 550 && elapsed <= 950) {
         finalizeQte(true);
       } else {
         finalizeQte(false);
@@ -5421,7 +5475,7 @@ function startEnemyTurnTelegraph() {
 
   setTimeout(() => {
     if (!qteResolved) finalizeQte(false);
-  }, 1000); // Timeout maximo (reduzido para 1000ms para ficar mais rápido)
+  }, 1200); // Timeout sincronizado com animação CSS (1.2s)
 }
 
 function showQteResult(success) {
@@ -7149,6 +7203,17 @@ renderAllEngines = function () {
 // Patch navigate para renderizar conquistas ao abrir a aba
 const _origNavigate = navigate;
 navigate = function (tab) {
+  // Safeguard: se o overlay de morte ainda estiver ativo, fecha-o ao navegar
+  const deathOv = document.getElementById("death-overlay");
+  if (deathOv && deathOv.classList.contains("active")) {
+    deathOv.classList.remove("active");
+    deathOv.style.animation = "none";
+    deathOv.style.opacity = "0";
+    void deathOv.offsetWidth;
+    deathOv.style.animation = "";
+    deathOv.style.opacity = "";
+    if (typeof clearDamageVignette === "function") clearDamageVignette();
+  }
   _origNavigate(tab);
   if (tab === MV_TAB_CONQUISTAS) {
     renderAchievementsTab();
@@ -7818,7 +7883,16 @@ window.emergencyRest = function () {
   hero.stamina = calc.maxStamina;
 
   if (hero.dungeonLevel > 1) {
-    hero.dungeonLevel--;
+    if (hero.floorExploration > 0) {
+      hero.dungeonLevel--;
+      triggerToast("Você descansou, mas a punição o fez recuar um andar.");
+    } else {
+      appendTerminalLog(
+        "✨ A masmorra considera seu esforço por atravessar mais um inferno. Você descansa sem ser arrastado de volta ao andar anterior.",
+        "reward"
+      );
+      triggerToast("Você descansou em segurança. Nenhum andar foi perdido.");
+    }
   }
   hero.floorProgress = 0;
   hero.floorExploration = 0;
@@ -7828,9 +7902,7 @@ window.emergencyRest = function () {
 
   commitStorage();
   renderAllEngines();
-  triggerToast(
-    "Você descansou. HP, Mana e Estamina restaurados. Você recuou um andar.",
-  );
+  // Os toasts já foram disparados de forma contextual acima.
 };
 
 // ================= TOGGLE SIDEBAR =================
@@ -7941,3 +8013,146 @@ window.openNecromancyBook = function() {
   }
 };
 
+// =========================================================================
+//  A VOZ DO NEPHALEM (CRIADOR)
+// =========================================================================
+const VOICES_OF_NEPHALEM = {
+  hero_death: [
+      "Achei que você duraria mais... Que decepção.",
+      "Seus ossos vão decorar a entrada do meu labirinto.",
+      "Tanta arrogância, tão pouca habilidade."
+  ],
+  boss_kill: [
+      "Como você...? sorte de principiante, esse era so aquecimento... O próximo não será tão piedoso.",
+      "Você matou meu bicho de estimação... Vai pagar caro por isso.",
+      "Interessante... Talvez você não seja um inseto completo, mas ainda esta bem longe."
+  ],
+  miss_attack: [
+      "Até um cego acertaria esse golpe, Nephalem falso.",
+      "Você está balançando uma arma ou espantando moscas? Isso esta desafiando meu dominio? não me faça rir"
+  ],
+  coward_flee: [
+      "Fuja, ratinho! As sombras sempre alcançam os covardes, elas amam o medo, é o petisco favorito delas...",
+      "Que patético. Nem ouse olhar para trás..."
+  ],
+  low_hp_heal: [
+      "Bebendo poções como um mendigo sedento... Adorável.",
+      "Adiar o inevitável só torna a sua queda mais doce...",
+      "Você deve ser o favorito do mercador, não é? Rios de ouro ele ganha de você..."
+  ],
+  player_skill_used: [
+      "Olha só o que temos aqui...brincando de ser heroi? Aprendeu com o Kirito?",
+      "Tão cheio de si, me lembra ate um certo meio demonio de jaqueta vermelha...",
+      "Espera...de onde criou essa habilidade? não vai dizer que roubou isso de um lorde premisso?"
+  ]
+};
+
+// ================= COMPRAR ILUMINAÇÃO (SKILL POINT) =================
+window.buySkillPoint = function() {
+  const hero = getActiveHero();
+  if (hero.gold < 2000) {
+    return triggerToast("O Sábio Eremita te ignora. Você precisa de 2000 PO.");
+  }
+  hero.gold -= 2000;
+  hero.skillPoints = (hero.skillPoints || 0) + 1;
+  if(window.appendTerminalLog) window.appendTerminalLog("✨ O Sábio Eremita toca sua testa. Você transcende e recebe +1 Ponto de Habilidade!", "reward");
+  if(window.triggerScreenShake) window.triggerScreenShake();
+  commitStorage();
+  renderAllEngines();
+};
+
+// ================= MERCADO NEGRO (Gacha e Mapa Secreto) =================
+window.buySecretMap = function() {
+  const hero = getActiveHero();
+  if (hero.gold < 15000) {
+    return triggerToast("O Cartógrafo zomba da sua pobreza. Volte com 15000 PO.");
+  }
+  hero.gold -= 15000;
+  hero.hasSecretMap = true;
+  if(window.appendTerminalLog) window.appendTerminalLog("🗺️ O Cartógrafo entrega um pergaminho manchado de sangue. A Masmorra Secreta foi localizada!", "reward");
+  triggerToast("Mapa Secreto Adquirido! (Permanente)");
+  commitStorage();
+  renderAllEngines();
+};
+
+window.buyGachaBox = function(type) {
+  const hero = getActiveHero();
+  const cost = type === 'abyssal' ? 2500 : 500;
+  
+  if (hero.gold < cost) {
+    return triggerToast(`Ouro insuficiente para comprar o Baú ${type === 'abyssal' ? 'Abissal' : 'Rústico'}.`);
+  }
+  
+  hero.gold -= cost;
+  
+  const roll = Math.random();
+  let rarity = "Normal";
+  if (type === 'abyssal') {
+    rarity = roll < 0.2 ? "Lendario" : (roll < 0.6 ? "Raro" : "Magico");
+  } else {
+    rarity = roll < 0.1 ? "Raro" : (roll < 0.3 ? "Magico" : "Normal");
+  }
+  
+  const types = ["arma", "capacete", "armadura", "luvas", "botas", "escudo", "anel"];
+  const cType = types[Math.floor(Math.random() * types.length)];
+  const power = Math.floor(20 + Math.random() * 30 * (rarity === "Lendario" ? 3 : (rarity === "Raro" ? 2 : 1)));
+  
+  let damage = 0, defense = 0;
+  if (["arma", "escudo"].includes(cType)) { damage = power; } else { defense = Math.floor(power * 1.12); }
+  
+  const item = {
+    id: "gacha_" + Date.now(),
+    name: `Relíquia do Baú [${rarity}]`,
+    type: cType,
+    rarity: rarity,
+    damage: damage,
+    defense: defense,
+    power: power,
+    durability: 100,
+    maxDurability: 100,
+    desc: `Um item selado retirado do Baú ${type === 'abyssal' ? 'Abissal' : 'Rústico'}.`
+  };
+  
+  if(!hero.inventory) hero.inventory = [];
+  hero.inventory.push(item);
+  
+  triggerToast(`🎁 Você abriu o baú e encontrou: ${item.name}!`);
+  if(window.triggerScreenShake) window.triggerScreenShake();
+  commitStorage();
+  renderAllEngines();
+};
+
+window.eventsVoice = function(event, entityName) {
+  const phrases = VOICES_OF_NEPHALEM[event];
+  if (!phrases || phrases.length === 0) return;
+
+  const randomQuote = phrases[Math.floor(Math.random() * phrases.length)];
+
+  // Remove animação anterior se houver
+  let existing = document.getElementById("nephalem-voice-dom");
+  if (existing) {
+    existing.remove();
+  }
+
+  // Cria o overlay de texto tremendo vermelho no meio da tela
+  const overlay = document.createElement("div");
+  overlay.id = "nephalem-voice-dom";
+  overlay.className = "nephalem-voice-overlay";
+  overlay.innerText = randomQuote;
+  document.body.appendChild(overlay);
+
+  // Treme a tela pra dar impacto
+  if (window.triggerScreenShake) window.triggerScreenShake();
+  
+  // Manda pro log também pra registrar
+  if (window.appendTerminalLog) {
+      window.appendTerminalLog(`👁️ A Voz do Nephalem: "${randomQuote}"`, "nephalem-voice");
+  }
+
+  // Remove depois da animação
+  setTimeout(() => {
+    if (overlay && overlay.parentNode) {
+      overlay.parentNode.removeChild(overlay);
+    }
+  }, 4500);
+};
